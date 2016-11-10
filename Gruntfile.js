@@ -26,7 +26,7 @@ module.exports = function(grunt) {
         }]
       }
     },
-    clean : ['<%= target %>'],
+    clean : ['<%= target %>', 'tmp'],
     replace : {
       template : {
         src : ['tmp/template.js'],
@@ -81,10 +81,10 @@ module.exports = function(grunt) {
     },
     watch : {
       js : {
-        files : ['js/silverchat*'], tasks : ['copy', 'htmlConvert', 'replace:template', 'insert']
+        files : ['js/silverchat*'], tasks : ['jshint', 'copy', 'insert', 'replace:banner']
       },
       template : {
-        files : ['template/*.html'], tasks : ['copy', 'htmlConvert', 'replace:template', 'insert']
+        files : ['template/*.html'], tasks : ['copy', 'htmlConvert', 'replace:template', 'insert', 'replace:banner']
       }
     },
     jsbeautifier : {

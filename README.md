@@ -1,4 +1,4 @@
-== Silverpeas Chat Client for the Web ==
+# Silverpeas Chat Client for the Web
 
 SilverChat is a tiny XMPP chat client written in Javascript and built upon [JSXC](https://github.com/jsxc/jsxc).
 

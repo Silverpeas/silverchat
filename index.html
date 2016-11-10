@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Test of Silverpeas JSXC</title>
+  <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+  <script src="jsxc/lib/jquery.slimscroll.js"></script>
+  <script src="jsxc/lib/jquery.fullscreen.js"></script>
+  <script src="jsxc/lib/jsxc.dep.min.js"></script>
+  <script src="jsxc/jsxc.min.js"></script>
+  <script src="build/js/silverchat.js"></script>
+  <link href="https://code.jquery.com/ui/1.11.4/themes/ui-lightness/jquery-ui.css" media="all" rel="stylesheet" type="text/css"/>
+  <link href="jsxc/css/jsxc.css" media="all" rel="stylesheet" type="text/css"/>
+  <link href="css/silverchat.css" media="all" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<h1>A Simple Test of SilverChat</h1>
+<a id="logout" href="#">Logout</a>
+<script type="application/javascript">
+  $(function() {
+    SilverChat.init({
+      path : '.',
+      id : 'miguel',
+      password : 'azerty',
+      language : 'fr'
+    }).start();
+  });
+</script>
+</body>
+</html>

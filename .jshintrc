@@ -36,6 +36,6 @@
       "setupRTC":true,
       "SDPUtil":true,
       "getSelection":true,
-      "silverChat": true
+      "SilverChat": true
    }
 }
