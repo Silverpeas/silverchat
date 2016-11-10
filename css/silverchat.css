@@ -1,6 +1,6 @@
 #silverchat_roster, #jsxc_windowList {
   font-family: Calibri, "PT Sans", "Trebuchet MS", 'Helvetica Neue', Arial;
-  font-size: 13px !important;
+  font-size: 13px;
 }
 
 #silverchat_roster {
@@ -9,31 +9,30 @@
   bottom: 0px;
   right: 20px;
   overflow: hidden;
-  background: #1c94d4;
   width: 250px;
-  box-shadow: 3px -3px 3px 3px rgba(0, 0, 0, 0.1);
+  background-color: #f5f5f5;
+  box-shadow: 0px 0px 5px 0px rgba( 0, 0, 0, 0.3);
 }
 
 #silverchat_roster_header {
-  padding: 0.4em;
-  height: 30px;
-  color: white;
-  font-weight: bolder;
+  color: #FFF;
+  background-color: #1c94d4;
+  position: relative;
+  height: 2.5em;
+  line-height: 2.5em;
 }
 
 #silverchat_roster .silverchat_settings {
   cursor: pointer;
-  background: url('../img/toggle-settings-menu_white.svg');
+  background: url('../img/toggle-settings-menu_white.svg') no-repeat;
   background-size: 90%;
-  background-repeat: no-repeat;
   content: ' ';
   display: inline-block;
   width: 18px;
   height: 18px;
   vertical-align: middle;
-  margin-right: 0.5em;
-  margin-left: 0.7em;
   float: right;
+  margin: 0.7em;
 }
 
 #silverchat_roster .notification_count {
@@ -52,14 +51,13 @@
 }
 
 #silverchat_roster_body {
-  background: white;
   height: 480px;
   overflow: hidden;
+  width: 100%;
 }
 
 #silverchat_roster_body .silverchat_roster_content {
-  width: 100%;
-  background: white;
+  background: #FFF;
   margin-bottom: 2em;
 }
 
@@ -67,54 +65,45 @@
   height: 68%;
   overflow-x: hidden;
   overflow-y: scroll;
-  margin: 3px;
-  border: solid 1px silver;
+  border-top: solid 1px #ddd;
+  border-bottom: solid 1px #ddd;
+  background-color: #FFF;
 }
 
-#silverchat_filter_buddies {
-  background-color: #EEEEEE;
-  color: silver;
+#silverchat_filter_buddies,
+#silverchat_filter_talks {
+  color:#212121;
   cursor: pointer;
   display: block;
   float: right;
-  height: 40px;
-  line-height: 40px;
+  line-height: 3em;
   text-align: center;
   text-decoration: none;
   text-transform: uppercase;
   width: 50%;
+  background: #f5f5f5 url(../img/bg-select-chat.png) bottom right no-repeat;
 }
 
 #silverchat_filter_talks {
-  background-color: #EEEEEE;
-  color: silver;
-  cursor: pointer;
-  display: block;
   float: left;
-  height: 40px;
-  line-height: 40px;
-  text-align: center;
-  text-decoration: none;
-  text-transform: uppercase;
-  width: 50%;
+}
+
+#silverchat_filter_talks.jsxc-active-filter ,
+#silverchat_filter_buddies.jsxc-active-filter {
+    color: #1c94d4 ;
+    background-position: bottom left;
 }
 
 #silverchat_roster_menu_toggle {
   content: ' ';
-  background: url('../img/toggle-roster-menu.svg');
-  background-size: 90%;
-  background-repeat: no-repeat;
-  content: ' ';
-  display: inline-block;
-  width: 18px;
-  height: 18px;
+  background:transparent url('../img/toggle-roster-menu.svg') right center no-repeat;
+  display: block;
+  clear:both;
+  height:32px;
   vertical-align: middle;
-  float: right;
-  margin-top: 0.9em;
-  margin-left: 0.7em;
-  margin-right: 0.7em;
+  margin:0 1em ;
   cursor: pointer;
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 #silverchat_roster_menu_toggle:hover {
@@ -147,8 +136,7 @@
   height: 18px;
   vertical-align: middle;
   float: left;
-  margin-right: 0.7em;
-  margin-left: 0.5em;
+  margin: 0.7em;
 }
 
 #silverchat_roster.jsxc_state_hidden {
