@@ -1,0 +1,26 @@
+{
+  "name": "silverchat",
+  "version": "1.0.0",
+  "description": "Real-time chat client for Silverpeas",
+  "homepage": "https://www.silverpeas.org/",
+  "bugs": "https://github.com/Silverpeas/silverchat/issues",
+  "license": "MIT",
+  "author": "Miguel Moquillon <miguel.moquillon@silverpeas.org>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Silverpeas/silverchat"
+  },
+  "devDependencies": {
+    "grunt": ">=0.4.5 <1.0.0",
+    "grunt-contrib-clean": "~1.0.0",
+    "grunt-contrib-copy": "~1.0.0",
+    "grunt-contrib-csslint": "^2.0.0",
+    "grunt-contrib-jshint": "~1.0.0",
+    "grunt-contrib-uglify": "^2.0.0",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt-html-convert": "0.0.2",
+    "grunt-jsbeautifier": "^0.2.10",
+    "grunt-text-replace": "~0.4.0",
+    "grunt-insert": "^0.1.0"
+  }
+}
