@@ -32,6 +32,7 @@
   position: relative;
   height: 2.5em;
   line-height: 2.5em;
+  cursor:pointer;
 }
 
 /* settings in the roster header
@@ -81,6 +82,12 @@
   border-top: solid 1px #ddd;
   border-bottom: solid 1px #ddd;
   background-color: #FFF;
+  clear:both;
+}
+
+#silverchat_roster_content #jsxc_buddylist,
+#silverchat_roster_content .slimScrollDiv {
+  width:100% !important;
 }
 
 #silverchat_buddies_filter,
@@ -103,16 +110,25 @@
     background-position: bottom left;
 }
 
+#silverchat_roster_tabs {
+  position:relative;
+  padding-top:12px;
+}
+
 #silverchat_roster_menu_toggle {
   content: ' ';
-  background:transparent url('../img/toggle-roster-menu.svg') right center no-repeat;
+  background:transparent url('../img/packIconsChat.png') right -375px no-repeat;
   display: block;
-  clear:both;
-  height:32px;
+
+  height:20px;
   vertical-align: middle;
-  margin:0 1em ;
+
   cursor: pointer;
-  opacity: 0.6;
+  opacity: 0.4;
+  position: absolute;
+  top: 0;
+  right: 0.25em;
+  width: 20px;
 }
 
 #silverchat_roster_menu_toggle:hover {
@@ -136,9 +152,7 @@
 }
 
 #silverchat_roster .silverchat_logo {
-  background: url('../jsxc/img/XMPP_logo.svg');
-  background-size: 90%;
-  background-repeat: no-repeat;
+  background: url('../img/packIconsChat.png') 0 -400px no-repeat;
   content: ' ';
   display: inline-block;
   width: 18px;
@@ -273,26 +287,32 @@ select.silverchat_presence option.jsxc_dnd {
 select.silverchat_presence option.jsxc_offline {
 }*/
 
-#silverchat_roster > .jsxc_bottom {
+#silverchat_roster_footer  {
   position: absolute;
   left: 0;
   bottom: 0;
   width: 100%;
   line-height: 34px;
-  background-color: #eeeeee;
+  height: 34px;
   z-index: 50;
-  padding-right: 4px;
+  padding:0;
 }
 
-#silverchat_roster > .jsxc_bottom:hover {
-  background-color: #ddd;
+#silverchat_roster_footer .jsxc_list {
+  background:#ddd url(../img/packIconsChat.png)  0.5em -438px no-repeat;
+  padding-left:2em;
 }
 
-#silverchat_roster > .jsxc_bottom .jsxc_inner {
+#silverchat_roster_footer::before {
+  position: absolute;
+  left: 0.8em;
+  bottom: 0.7em;
+}
+#silverchat_roster_footer  .jsxc_inner {
   width: 100%;
 }
 
-#silverchat_roster > .jsxc_bottom ul {
+#silverchat_roster_footer  ul {
   padding: 0;
   margin: 0;
   width: 100%;
@@ -301,11 +321,11 @@ select.silverchat_presence option.jsxc_offline {
   margin: 0;
 }
 
-#silverchat_roster > .jsxc_bottom ul li:last-child {
+#silverchat_roster_footer  ul li:last-child {
   border-bottom: 1px solid transparent;
 }
 
-#silverchat_roster > .jsxc_bottom li {
+#silverchat_roster_footer  li {
   height: 44px;
   background-color: #eeeeee;
   color: #000;
@@ -323,20 +343,17 @@ select.silverchat_presence option.jsxc_offline {
   opacity: 0.8;
 }
 
-#silverchat_roster > .jsxc_bottom li.jsxc_disabled {
+#silverchat_roster_footer  li.jsxc_disabled {
   color: #333333;
   cursor: default;
 }
 
-#silverchat_roster > .jsxc_bottom li:hover:not(.jsxc_disabled) {
+#silverchat_roster_footer  li:hover:not(.jsxc_disabled) {
   color: #000;
   background-color: #ddd;
 }
 
-#silverchat_roster > .jsxc_bottom > div > span {
+#silverchat_roster_footer  > div > span {
   cursor: pointer;
 }
 
-#silverchat_roster > .jsxc_bottom > div:hover {
-  /*color: $roster_bottom_color_hover;*/
-}
