@@ -30,9 +30,9 @@ I18next.fr.translation['Buddies'] = 'Contacts';
 I18next.en.translation['Buddies'] = 'Buddies';
 I18next.de.translation['Buddies'] = 'Buddies';
 
-I18next.fr.translation['Talks'] = 'Discussions';
-I18next.en.translation['Talks'] = 'Talks';
-I18next.de.translation['Talks'] = 'Talks';
+I18next.fr.translation['Group Chats'] = 'Discussions';
+I18next.en.translation['Group Chats'] = 'Group Chats';
+I18next.de.translation['Group Chats'] = 'Group Chats';
 
 I18next.fr.translation['Menu'] = 'Menu';
 I18next.en.translation['Menu'] = 'Menu';

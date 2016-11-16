@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Test of Silverpeas JSXC</title>
+  <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+  <script src="jsxc/lib/jquery.slimscroll.js"></script>
+  <script src="jsxc/lib/jquery.fullscreen.js"></script>
+  <script src="jsxc/lib/jsxc.dep.min.js"></script>
+  <script src="jsxc/jsxc.min.js"></script>
+  <link href="https://code.jquery.com/ui/1.11.4/themes/ui-lightness/jquery-ui.css" media="all" rel="stylesheet" type="text/css"/>
+  <link href="jsxc/css/jsxc.css" media="all" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<h1>A Simple Test of JSXC</h1>
+<form id="form">
+  <input type="text" id="username" value="miguel">
+  <input type="password" id="password" value="azerty">
+  <input type="submit" value="Login">
+</form>
+<input type="button" id="logout" value="Logout">
+</form>
+<script type="application/javascript">
+  $(function() {
+    jsxc.init({
+      loginForm: {
+        form: '#form',
+        jid: '#username',
+        pass: '#password'
+      },
+      logoutElement: $('#logout'),
+      root: 'jsxc',
+      xmpp: {
+        url: 'https://im.silverpeas.net/http-bind/',
+        domain: 'im.silverpeas.net',
+        resource: 'SilverChat'
+      }
+    });
+  });
+</script>
+</body>
+</html>

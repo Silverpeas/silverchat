@@ -1,6 +1,18 @@
+#jsxc_windowList, #jsxc_windowList.jsxc_roster_hidden {
+  right: 280px;
+}
+
 #silverchat_roster, #jsxc_windowList {
   font-family: Calibri, "PT Sans", "Trebuchet MS", 'Helvetica Neue', Arial;
   font-size: 13px;
+}
+
+.jsxc_video {
+  display: none!important;
+}
+
+.jsxc_bar {
+  background-color: #1c94d4;
 }
 
 #silverchat_roster {
@@ -22,6 +34,7 @@
   line-height: 2.5em;
 }
 
+/* settings in the roster header
 #silverchat_roster .silverchat_settings {
   cursor: pointer;
   background: url('../img/toggle-settings-menu_white.svg') no-repeat;
@@ -33,7 +46,7 @@
   vertical-align: middle;
   float: right;
   margin: 0.7em;
-}
+}*/
 
 #silverchat_roster .notification_count {
   background-color: #ffa500;
@@ -61,7 +74,7 @@
   margin-bottom: 2em;
 }
 
-#silverchat_roster_tab {
+#silverchat_roster_content {
   height: 68%;
   overflow-x: hidden;
   overflow-y: scroll;
@@ -70,8 +83,8 @@
   background-color: #FFF;
 }
 
-#silverchat_filter_buddies,
-#silverchat_filter_talks {
+#silverchat_buddies_filter,
+#silverchat_groupchats_filter {
   color:#212121;
   cursor: pointer;
   display: block;
@@ -84,12 +97,8 @@
   background: #f5f5f5 url(../img/bg-select-chat.png) bottom right no-repeat;
 }
 
-#silverchat_filter_talks {
-  float: left;
-}
-
-#silverchat_filter_talks.jsxc-active-filter ,
-#silverchat_filter_buddies.jsxc-active-filter {
+#silverchat_groupchats_filter.selected,
+#silverchat_buddies_filter.selected {
     color: #1c94d4 ;
     background-position: bottom left;
 }
@@ -127,7 +136,7 @@
 }
 
 #silverchat_roster .silverchat_logo {
-  background: url('../img/toggle-mediapanel.svg');
+  background: url('../jsxc/img/XMPP_logo.svg');
   background-size: 90%;
   background-repeat: no-repeat;
   content: ' ';
@@ -234,3 +243,100 @@
   height: 18px;
 }
 
+/*select.silverchat_presence {
+  background:transparent;
+  width:200px;
+  border: none;
+  outline: none;
+  height:21px;
+}
+
+select.silverchat_presence option {
+  position:relative;
+  padding-left:20px;
+}
+
+select.silverchat_presence option.jsxc_online {
+}
+select.silverchat_presence option.jsxc_chat {
+  background:transparent url(../jsxc/img/presence_chat.svg) 4px -70px no-repeat;
+}
+
+select.silverchat_presence option.jsxc_away {
+  background:transparent url(../jsxc/img/presence_xa.svg) 4px -70px no-repeat;
+}
+
+select.silverchat_presence option.jsxc_dnd {
+  background:transparent url(../jsxc/img/presence_dnd.svg) 4px -70px no-repeat;
+}
+
+select.silverchat_presence option.jsxc_offline {
+}*/
+
+#silverchat_roster > .jsxc_bottom {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  line-height: 34px;
+  background-color: #eeeeee;
+  z-index: 50;
+  padding-right: 4px;
+}
+
+#silverchat_roster > .jsxc_bottom:hover {
+  background-color: #ddd;
+}
+
+#silverchat_roster > .jsxc_bottom .jsxc_inner {
+  width: 100%;
+}
+
+#silverchat_roster > .jsxc_bottom ul {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  border-top: 1px solid transparent;
+  background-color: #eeeeee;
+  margin: 0;
+}
+
+#silverchat_roster > .jsxc_bottom ul li:last-child {
+  border-bottom: 1px solid transparent;
+}
+
+#silverchat_roster > .jsxc_bottom li {
+  height: 44px;
+  background-color: #eeeeee;
+  color: #000;
+  cursor: pointer;
+  width: 100%;
+  padding-left: 44px;
+  line-height: 44px;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background-repeat: no-repeat;
+  background-position: 15px center;
+  background-size: 16px 16px;
+  opacity: 0.8;
+}
+
+#silverchat_roster > .jsxc_bottom li.jsxc_disabled {
+  color: #333333;
+  cursor: default;
+}
+
+#silverchat_roster > .jsxc_bottom li:hover:not(.jsxc_disabled) {
+  color: #000;
+  background-color: #ddd;
+}
+
+#silverchat_roster > .jsxc_bottom > div > span {
+  cursor: pointer;
+}
+
+#silverchat_roster > .jsxc_bottom > div:hover {
+  /*color: $roster_bottom_color_hover;*/
+}

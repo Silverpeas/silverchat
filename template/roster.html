@@ -1,42 +1,42 @@
 <div id="silverchat_roster">
 
   <!-- the roaster's header (the title bar) -->
-  <div id="silverchat_roster_header">
-    <div id="silverchat_roster_toggle">
-      <span class="silverchat_logo"></span>
-      <span class="silverchat_notification"></span>
+  <div id="silverchat_roster_header" class="silverchat_roster_toggle">
+    <span class="silverchat_logo"></span>
+    <div id="jsxc_notice">
+      <span></span>
+      <div class="jsxc_inner">
+        <ul></ul>
+      </div>
     </div>
-    <span class="silverchat_settings"></span>
   </div>
 
   <!-- the roaster's body (its content) -->
   <div id="silverchat_roster_body">
 
-    <!-- two tabs: one listing the buddies of the connected user, another listing the talks -->
+    <!-- two tabs: one listing the buddies of the connected user, another listing the group chats -->
     <div id="silverchat_roster_tabs">
-      <a id="silverchat_filter_buddies" data-i18n="Buddies" class="jsxc-active-filter"></a>
-      <a id="silverchat_filter_talks" data-i18n="Talks"></a>
+      <a id="silverchat_buddies_filter" data-i18n="Buddies"></a>
+      <a id="silverchat_groupchats_filter" data-i18n="Group Chats"></a>
       <span id="silverchat_roster_menu_toggle"></span>
     </div>
 
     <!-- the content of the active tab -->
-    <div id="silverchat_roster_tab">
+    <div id="silverchat_roster_content">
 
       <!-- first, the content of the roaster menu overrides the content of the active tab -->
-      <div id="silverchat_roster_menu" class="silverchat_roster_content jsxc_state_hidden">
+      <div id="silverchat_roster_menu" class="silverchat_roster_content">
         <div class="silverchat_title" data-i18n="Menu"></div>
         <a id="search_user" class="silverchat_menu_item" data-i18n="Search_user"></a>
-        <a id="manage_notifications" class="silverchat_menu_item">
-          <span data-i18n="notifications"></span>&nbsp;<span class="notification_count"></span>
-        </a>
+        <a id="manage_notifications" class="silverchat_menu_item" data-i18n="Notifications"></a>
         <div class="jsxc-content-separator"></div>
         <a id="new_talk" class="silverchat_menu_item" data-i18n="New_Talk"></a>
         <a id="invite_talk" class="silverchat_menu_item" data-i18n="Invite_To_A_Talk"></a>
         <div class="jsxc-content-separator"></div>
       </div>
 
-      <!-- the tab with the buddies of the connected user -->
-      <div id="silverchat_buddies" class="silverchat_roster_content jsxc_state_shown">
+      <!-- jsxc renders into a single container both the buddies and the connected groupchats -->
+      <div id="silverchat_roster_chats" class="silverchat_roster_content">
         <!-- We need to have a block before buddy list -->
         <div>&nbsp;</div>
         <ul id="jsxc_buddylist"></ul>
@@ -45,4 +45,19 @@
 
   </div>
 
+  <div id="silverchat_roster_footer" class="jsxc_bottom jsxc_presence jsxc_rosteritem" data-bid="own">
+    <div id="jsxc_presence">
+      <span data-i18n="Offline">Offline</span>
+      <div class="jsxc_inner">
+        <ul>
+          <li data-pres="online" class="jsxc_online" data-i18n="Online"></li>
+          <li data-pres="chat" class="jsxc_chat" data-i18n="Chatty"></li>
+          <li data-pres="away" class="jsxc_away" data-i18n="Away"></li>
+          <li data-pres="xa" class="jsxc_xa" data-i18n="Extended_away"></li>
+          <li data-pres="dnd" class="jsxc_dnd" data-i18n="dnd"></li>
+          <li data-pres="offline" class="jsxc_offline" data-i18n="Offline"></li>
+        </ul>
+      </div>
+    </div>
+  </div>
 </div>
