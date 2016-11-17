@@ -13,6 +13,8 @@
    "browser": true,
    "multistr": true,
    "devel": true,
+   "esnext": true,
+   "es5": true,
    "globals": {
       "t":true,
       "i18n":true,

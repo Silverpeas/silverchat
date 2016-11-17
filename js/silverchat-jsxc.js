@@ -26,7 +26,12 @@
  * Overrides the initialization of the jsxc roster's GUI. The silverchat GUI is initialized here.
  */
 jsxc.gui.roster.init = function() {
-  $(jsxc.options.rosterAppend + ':first').append($(jsxc.gui.template.get('roster')));
+  var roster = jsxc.gui.template.get('roster');
+  if ($('#' + roster.attr('id')).length !== 0) {
+    return;
+  }
+
+  $(jsxc.options.rosterAppend + ':first').append(roster);
 
   if (jsxc.options.get('hideOffline')) {
     $('#jsxc_buddylist').addClass('jsxc_hideOffline');
@@ -50,10 +55,20 @@ jsxc.gui.roster.init = function() {
     var self = $(this);
     var pres = self.data('pres');
 
-    if (pres === 'offline') {
-      jsxc.xmpp.logout(false);
-    } else {
-      jsxc.gui.changePresence(pres);
+    switch(pres) {
+      case 'offline':
+        jsxc.gui.changePresence(pres, true);
+        setTimeout(function() {
+          SilverChat.disconnect();
+        }, 0);
+        break;
+      case 'online':
+        SilverChat.connect();
+        jsxc.gui.changePresence(pres, true);
+        break;
+      default:
+        jsxc.gui.changePresence(pres);
+        break;
     }
   });
 

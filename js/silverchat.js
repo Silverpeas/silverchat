@@ -107,11 +107,31 @@ var SilverChat = null;
     },
 
     /**
-     * Starts the chat client.
+     * Starts the chat client. The current user is connected to the remote chat server.
      * @returns {SilverChat}
      */
     start : function() {
       jsxc.start(this.settings.id + '@' + this.settings.domain, this.settings.password);
+      return this;
+    },
+
+    /**
+     * Connects to the remote chat server. To be used when the SilverChat is already started and
+     * the current user is disconnected.
+     * @return {SilverChat}
+     */
+    connect : function() {
+      jsxc.xmpp.login(this.settings.id + '@' + this.settings.domain, this.settings.password);
+      return this;
+    },
+
+    /**
+     * Disconnects from the remote chat server. To be used when the SilverChat is already started
+     * and the current user is yet connected.
+     * @return {SilverChat}
+     */
+    disconnect : function() {
+      jsxc.xmpp.logout(false);
       return this;
     },
 
