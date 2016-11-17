@@ -76,7 +76,7 @@
 }
 
 #silverchat_roster_content {
-  height: 68%;
+  height: 82%;
   overflow-x: hidden;
   overflow-y: scroll;
   border-top: solid 1px #ddd;
@@ -299,7 +299,7 @@ select.silverchat_presence option.jsxc_offline {
 }
 
 #silverchat_roster_footer .jsxc_list {
-  background:#ddd url(../img/packIconsChat.png)  0.5em -438px no-repeat;
+  /*background:#ddd url(../img/packIconsChat.png)  0.5em -438px no-repeat;*/
   padding-left:2em;
 }
 

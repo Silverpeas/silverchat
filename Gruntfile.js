@@ -46,6 +46,11 @@ module.exports = function(grunt) {
     insert : {
       options : {},
       gui : {
+        src : 'js/silverchat-gui.js',
+        dest : '<%= target %>/js/silverchat.js',
+        match : '//Silverchat GUI'
+      },
+      templates : {
         src : 'tmp/template.js',
         dest : '<%= target %>/js/silverchat.js',
         match : '//Silverchat GUI templates'

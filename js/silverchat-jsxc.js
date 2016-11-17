@@ -147,7 +147,7 @@ jsxc.gui.roster.toggle = function(state) {
  */
 jsxc.gui.showInBuddyList = function(type) {
   if (type !== 'groupchat' && type !== 'chat') {
-    console.log('Unknown jsxc data type in buddy list:' + type);
+    jsxc.error('Unknown jsxc data type in buddy list:' + type);
     return;
   }
 
