@@ -70,19 +70,53 @@
   width: 100%;
 }
 
-#silverchat_roster_body .silverchat_roster_content {
-  background: #FFF;
-  margin-bottom: 2em;
-}
-
 #silverchat_roster_content {
-  height: 82%;
+  height: 85%;
   overflow-x: hidden;
   overflow-y: scroll;
-  border-top: solid 1px #ddd;
-  border-bottom: solid 1px #ddd;
-  background-color: #FFF;
+  border-bottom:1px solid  #ddd;
+  background: #FFF;
+  margin-bottom: 34px;
   clear:both;
+}
+
+.ui-tooltip {
+  font-size:11px;
+  box-shadow:none;
+  border:1px solid #ddd;
+}
+
+#silverchat_roster_content .jsxc_rosteritem {
+    line-height: 2.5em;
+}
+.jsxc_window .jsxc_tools > div {
+  line-height:30px;
+}
+ .jsxc_menu a {
+  opacity:0.8;
+}
+ .jsxc_menu.jsxc_open {
+  -webkit-filter:none;
+  filter: none;
+  border: 1px solid #ddd;
+  padding:0;
+}
+
+ .jsxc_menu.jsxc_open a {
+  text-decoration:none;
+  padding:0 5px;
+  text-align:left;
+  display:block;
+  border-bottom: 1px solid #ddd;
+}
+
+ .jsxc_menu.jsxc_open ul li:last-child a {
+  border-bottom:0;
+ }
+
+.jsxc_menu::after {
+  -webkit-filter: drop-shadow(0px -1px 0px rgba(150, 150, 150, 0.50));
+  filter: drop-shadow(0px -1px 0px rgba(150, 150, 150, 0.50));
 }
 
 #silverchat_roster_content #jsxc_buddylist,
@@ -100,8 +134,12 @@
   text-align: center;
   text-decoration: none;
   text-transform: uppercase;
-  width: 50%;
+  width:50%;
   background: #f5f5f5 url(../img/bg-select-chat.png) bottom right no-repeat;
+}
+#silverchat_buddies_filter{
+  width:40%;
+  padding-right:10%
 }
 
 #silverchat_groupchats_filter.selected,
@@ -112,21 +150,18 @@
 
 #silverchat_roster_tabs {
   position:relative;
-  padding-top:12px;
 }
 
 #silverchat_roster_menu_toggle {
   content: ' ';
-  background:transparent url('../img/packIconsChat.png') right -375px no-repeat;
+  background:transparent url('../img/packIconsChat.png') right -550px no-repeat;
   display: block;
-
   height:20px;
   vertical-align: middle;
-
   cursor: pointer;
   opacity: 0.4;
   position: absolute;
-  top: 0;
+  top: 1em;
   right: 0.25em;
   width: 20px;
 }
@@ -136,19 +171,19 @@
 }
 
 #search_user:before {
-  background-image: url('../img/action-search-users.svg');
+  background: url('../img/packIconsChat.png') 0 -221px no-repeat;
 }
 
 #manage_notifications:before {
-  background-image: url('../img/action-manage-notifications.svg');
+  background: url('../img/packIconsChat.png') 0 -591px no-repeat;
 }
 
 #new_talk:before {
-  background-image: url('../img/action-new-talk.svg');
+  background: url('../img/packIconsChat.png') 0 -72px no-repeat;
 }
 
 #invite_talk:before {
-  background-image: url('../img/action-invite-in-talk.svg');
+  background: url('../img/packIconsChat.png') 0 -295px no-repeat;
 }
 
 #silverchat_roster .silverchat_logo {
@@ -195,12 +230,11 @@
 
 .silverchat_roster_content .silverchat_menu_item {
   display: block;
-  padding: 0.5em;
-  padding-left: 0.3em;
+  padding: 0.5em 0.5em 0.5em 0.3em;
   text-decoration: none;
   cursor: pointer;
   color: #3F3F3F;
-  clear: both;
+  border-bottom: 1px solid #ededed;
 }
 
 .silverchat_roster_content .silverchat_menu_item:hover {
@@ -210,7 +244,7 @@
 
 .silverchat_roster_content .silverchat_menu_item:before {
   content: " ";
-  width: 1em;
+  width: 1.5em;
   display: inline-block;
   background-size: 100%;
   background-repeat: no-repeat;
@@ -299,7 +333,7 @@ select.silverchat_presence option.jsxc_offline {
 }
 
 #silverchat_roster_footer .jsxc_list {
-  /*background:#ddd url(../img/packIconsChat.png)  0.5em -438px no-repeat;*/
+  background:transparent url(../img/packIconsChat.png)  right -438px no-repeat;
   padding-left:2em;
 }
 
@@ -310,6 +344,21 @@ select.silverchat_presence option.jsxc_offline {
 }
 #silverchat_roster_footer  .jsxc_inner {
   width: 100%;
+}
+
+#jsxc_buddylist li .jsxc_more {
+  display:none;
+  width:38px;
+  margin:0;
+}
+
+#jsxc_buddylist li:hover .jsxc_more {
+  display:block;
+}
+#jsxc_buddylist li:hover,
+.silverchat_roster_content a:hover,
+ .jsxc_menu.jsxc_open a:hover  {
+  background-color:#ededed;
 }
 
 #silverchat_roster_footer  ul {
