@@ -51,14 +51,14 @@ var SilverChat = null;
      * client.
      */
     settings : {
-      url : "https://im.silverpeas.net/http-bind/", /* BOSH url */
+      url : 'https://im.silverpeas.net/http-bind/', /* BOSH url */
       id : '', /* chat user id */
       password : '', /* chat user password */
-      domain : "im.silverpeas.net", /* chat service domain */
+      domain : 'im.silverpeas.net', /* default chat service domain */
       language : '', /* the language to use. By default English */
       path : chatPath, /* the path of the silverchat installation */
-      forceGroupChats: false, /* force to load group chats at startup (to use with buggy chat servers */
-      debug: false /* debug mode to display debug messages in the console */
+      forceGroupChats: false, /* force to load group chats at startup (to use with buggy chat servers) */
+      debug: false /* debug mode to display debugging messages in the console */
     },
 
     /**

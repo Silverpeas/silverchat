@@ -16,17 +16,23 @@
 </head>
 <body>
 <h1>A Simple Test of SilverChat</h1>
-<a id="logout" href="#">Logout</a>
+<form id="form">
+  <input type="text" id="username" value="miguel">
+  <input type="password" id="password" value="azerty">
+  <input type="submit" id="login" value="Login">
+</form>
 <script type="application/javascript">
   $(function() {
-    SilverChat.init({
-      path : '.',
-      id : 'aurore',
-      password : 'azerty',
-      language : 'fr',
-      forceGroupChats: true,
-      debug: true
-    }).start();
+    $('#form').submit(function() {
+      SilverChat.init({
+        path : '.',
+        id : $('#username').val(),
+        password : $('#password').val(),
+        language : 'fr',
+        debug: true
+      }).start();
+      return false;
+    });
   });
 </script>
 </body>
