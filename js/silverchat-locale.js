@@ -34,6 +34,10 @@ I18next.fr.translation['Group Chats'] = 'Discussions';
 I18next.en.translation['Group Chats'] = 'Group Chats';
 I18next.de.translation['Group Chats'] = 'Group Chats';
 
+I18next.fr.translation['Group_Chat'] = 'Discussion';
+I18next.en.translation['Group_Chat'] = 'Group Chat';
+I18next.de.translation['Group_Chat'] = 'Group Chat';
+
 I18next.fr.translation['Menu'] = 'Menu';
 I18next.en.translation['Menu'] = 'Menu';
 I18next.de.translation['Menu'] = 'Menu';
@@ -47,13 +51,17 @@ I18next.en.translation['Notifications'] = 'Notifications';
 I18next.de.translation['Notifications'] = 'Notifications';
 
 I18next.fr.translation['New_Talk'] = 'Nouvelle discussion';
-I18next.en.translation['New_Talk'] = 'New talk';
-I18next.de.translation['New_Talk'] = 'New talk';
+I18next.en.translation['New_Talk'] = 'New group chat';
+I18next.de.translation['New_Talk'] = 'New group chat';
 
 I18next.fr.translation['Invite_To_A_Talk'] = 'Inviter dans une discussion';
-I18next.en.translation['Invite_To_A_Talk'] = 'Invite to a talk';
-I18next.de.translation['Invite_To_A_Talk'] = 'Invite to a talk';
+I18next.en.translation['Invite_To_A_Talk'] = 'Invite to a group chat';
+I18next.de.translation['Invite_To_A_Talk'] = 'Invite to a group chat';
 
-I18next.fr.translation['New_Talk'] = 'Nouvelle discussion';
-I18next.en.translation['New_Talk'] = 'New talk';
-I18next.de.translation['New_Talk'] = 'New talk';
+I18next.fr.translation['New_invitation'] = '__sender__ vous invite à rejoindre la discussion __room__';
+I18next.en.translation['New_invitation'] = '__sender__ invite you to join him the group chat __room__';
+I18next.de.translation['New_invitation'] = '__sender__ invite you to join him the group chat __room__';
+
+I18next.fr.translation['Chat_room_name_pattern'] = 'Pas d\'espaces, pas de caractères accentués ou spéciaux (&"\'/:,;!?<>@)';
+I18next.en.translation['Chat_room_name_pattern'] = 'No spaces, no accented or specials characters (&"\'/:,;!?<>@)';
+I18next.de.translation['Chat_room_name_pattern'] = 'No spaces, no accented or specials characters (&"\'/:,;!?<>@)';

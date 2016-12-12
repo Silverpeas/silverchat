@@ -57,10 +57,58 @@ SilverChat.gui = {
      * Identifier of the tab to select by default when no one was registered into the user
      * session.
      */
-    DEFAULT : 1, // by default, render the buddies
+    DEFAULT : 1, // by default, render the buddies,
 
     /**
-     * Toggle the menu. If the menu is already displayed, then hide it and the content of the
+     * selection of the buddies to invite into a group chat.
+     */
+    selection : {
+      buddies : [],
+
+      add : function(bid, callback) {
+        for (var i = 0; i < this.buddies.length; i++) {
+          if (this.buddies[i] === bid) {
+            return this;
+          }
+        }
+        this.buddies.push(bid);
+        if (callback) {
+          callback();
+        }
+        return this;
+      },
+
+      remove : function(bid, callback) {
+        if (bid) {
+          for (var i = 0; i < this.buddies.length; i++) {
+            if (this.buddies[i] === bid) {
+              this.buddies.splice(i, 1);
+              if (callback) {
+                callback();
+              }
+              break;
+            }
+          }
+        } else {
+          this.buddies.length = 0;
+          if (callback) {
+            callback();
+          }
+        }
+        return this;
+      },
+
+      size : function() {
+        return this.buddies.length;
+      },
+
+      empty : function() {
+        return this.buddies.length === 0;
+      }
+    },
+
+    /**
+     * Toggles the menu. If the menu is already displayed, then hides it and the content of the
      * selected tab is shown, otherwise the content of the menu replace the content of the
      * selected tab.
      */
@@ -71,6 +119,11 @@ SilverChat.gui = {
         this.selectTab(this.NO_MENU);
       } else {
         // the menu is hidden, then show it
+        if (jsxc.options.get('muteNotification')) {
+          $('#manage_notifications').addClass('mute');
+        } else {
+          $('#manage_notifications').removeClass('mute');
+        }
         actual = this._maskOnceMenuIsShown(actual);
         this._switchContentTo('#silverchat_roster_menu');
         jsxc.storage.setUserItem('roster_content', actual);
@@ -79,10 +132,14 @@ SilverChat.gui = {
 
     /**
      * Selects either the specified tab or the one that was selected in the last user session.
+     *
+     * If no tab identifier is specified, then the tab that was previously selected in the
+     * user session is rendered. If no tab was previously selected, then the default one is
+     * taken.
+     * If the NO_MENU mask is passed, then the menu is hidden and the content of the previous
+     * selected tab in the user session is displayed.
      * The content of the selected tab is then shown and replaces the previous content in the
      * tab.
-     * @param tab an identifier of the tab or NO_MENU to show the previous content but by ensuring
-     * to hide the menu (in the case it was shown over the content of the selected tab).
      */
     selectTab : function() {
       var toTab = jsxc.storage.getUserItem('roster_content');
@@ -141,7 +198,7 @@ SilverChat.gui = {
     },
 
     /**
-     * Switch the displaying of the specified roster's tab content.
+     * Switches the displaying of the specified roster's tab content.
      * @param elt {string} elt the CSS class or the identifier of an HTML element embedding a
      * tab content.
      * @private
@@ -168,16 +225,77 @@ SilverChat.gui = {
    * It is actually invoked by the jsxc roster UI initialization.
    */
   init : function() {
-    if (SilverChat.settings.forceGroupChats) {
-      $(document).on('ready.roster.jsxc', function() {
-        jsxc.debug('Force to load group chats from remote');
-        jsxc.xmpp.bookmarks.loadFromRemote();
-      });
+    function clearSelection() {
+      SilverChat.gui.roster.selection.remove();
+      $('.jsxc_rosteritem.selected').removeClass('selected');
+      $('#new_talk').addClass('jsxc_disabled');
     }
 
-    $(document).on('add.roster.jsxc', function() {
-      // select either the default tab or the one that was selected in the previous user session.
+    // once the roster is ready to be rendered we perform some predefined actions according to
+    // the user preferences and to the SilverChat settings.
+    $(document).on('ready.roster.jsxc', function() {
+      if (SilverChat.settings.forceGroupChats) {
+        jsxc.debug('Force to load group chats from remote');
+        jsxc.xmpp.bookmarks.loadFromRemote();
+      }
+      if (jsxc.notification.isNotificationEnabled()) {
+        jsxc.notification.enableNotification();
+      } else {
+        jsxc.notification.disableNotification();
+      }
+    });
+
+    // for each item added into the buddy list, we customize its displaying and we set our own click
+    // handler.
+    $(document).on('add.roster.jsxc', function(event, bid, buddy, rosteritem) {
+      if (buddy.type !== 'groupchat') {
+        rosteritem.find('.jsxc_delete').remove(); // the buddy deletion must be done directly in Silverpeas
+        rosteritem.off('click'); // remove the previous click handler defined by JSXC itself
+        rosteritem.click(function(event) {
+          // when the CTRL key is pressed while clicking on the buddy item, then the item is
+          // just selected for further action. Otherwise the chat window is simply opened.
+          if (event.ctrlKey) {
+            if (rosteritem.hasClass('selected')) {
+              if (SilverChat.gui.roster.selection.remove(bid, function() {
+                    rosteritem.removeClass('selected');
+                  }).empty()) {
+                $('#new_talk').addClass('jsxc_disabled');
+              }
+            } else {
+              if (SilverChat.gui.roster.selection.add(bid, function() {
+                    rosteritem.addClass('selected');
+                  }).size() === 1) {
+                $('#new_talk').removeClass('jsxc_disabled');
+              }
+            }
+          } else {
+            clearSelection();
+            jsxc.gui.window.open(bid);
+          }
+        });
+      }
+      // a chat or a group chat is added: hide the menu and render the content of the actual tab
       SilverChat.gui.roster.selectTab(SilverChat.gui.roster.NO_MENU);
+    });
+
+    // invitation for a group chat is received from a buddy.
+    $(document).on('receive.invitation.silverchat', function(event, buddy, roomjid, subject) {
+      var name = Strophe.getNodeFromJid(roomjid);
+      jsxc.debug('Invation to ' + name + ' received from ' + buddy + ' for "' + subject + '"');
+      jsxc.notification.notify({
+        title : $.t('New_invitation', {sender : buddy, room : name}),
+        msg : subject || '',
+        soundFile : jsxc.CONST.SOUNDS.MSG,
+        source : buddy
+      });
+
+      jsxc.gui.window.clear(roomjid);
+      jsxc.storage.setUserItem('member', roomjid, {});
+
+      jsxc.muc.join(roomjid, Strophe.getNodeFromJid(jsxc.xmpp.conn.jid), null, name, subject, true,
+          true);
+
+      jsxc.gui.window.open(roomjid);
     });
 
     // menu toggling
@@ -193,6 +311,41 @@ SilverChat.gui = {
     // group chats tab displaying
     $('#silverchat_groupchats_filter').click(function() {
       SilverChat.gui.roster.selectTab(SilverChat.gui.roster.TALKS);
+    });
+
+    // notification management
+    $('#manage_notifications').click(function() {
+      if (jsxc.storage.getUserItem('presence') === 'dnd') {
+        return;
+      }
+
+      // invert current choice in notification
+      if (jsxc.notification.isNotificationEnabled()) {
+        jsxc.notification.disableNotification();
+      } else {
+        jsxc.notification.enableNotification();
+      }
+    });
+
+    // open a new group chat and invite to that group the previously selected buddies
+    $('#new_talk').click(function() {
+      if (!$(this).hasClass('jsxc_disabled')) {
+        jsxc.gui.dialog.open(jsxc.gui.template.get('chatroom'));
+        var $room = $('#jsxc_dialog #jsxc_room');
+        $room.attr('title', $.t('Chat_room_name_pattern'));
+        $('#new_talk_form').submit(function() {
+          event.preventDefault();
+          var name = $room.val() ||
+              Strophe.getNodeFromJid(jsxc.xmpp.conn.jid) + '_' + new Date().getMilliseconds();
+          var subject = $('#jsxc_dialog #jsxc_subject').val() || '';
+
+          var room = jsxc.muc.newRoom(name, subject, true);
+
+          jsxc.muc.invite(SilverChat.gui.roster.selection.buddies, room, subject);
+
+          clearSelection();
+        });
+      }
     });
   }
 };

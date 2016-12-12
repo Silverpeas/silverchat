@@ -152,6 +152,12 @@
   position:relative;
 }
 
+#silverchat_roster_menu>#jsxc_menu {
+  height: auto;
+  width: 100%;
+  text-align: inherit;
+}
+
 #silverchat_roster_menu_toggle {
   content: ' ';
   background:transparent url('../img/packIconsChat.png') right -550px no-repeat;
@@ -252,6 +258,11 @@
   display: block;
   float: left;
   height: 2em;
+}
+
+.silverchat_roster_content .silverchat_menu_item.jsxc_disabled {
+  opacity: 0.3;
+  cursor: default !important;
 }
 
 .silverchat_roster_content .silverchat_title {
@@ -404,5 +415,14 @@ select.silverchat_presence option.jsxc_offline {
 
 #silverchat_roster_footer  > div > span {
   cursor: pointer;
+}
+
+#manage_notifications.mute:before {
+  background: url('../img/packIconsChat.png') 0 0 no-repeat;
+}
+
+#jsxc_buddylist .jsxc_rosteritem.selected {
+  background: silver;
+  background: #d1deff;
 }
 
