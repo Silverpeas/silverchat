@@ -54,9 +54,10 @@ var SilverChat = null;
       url : 'https://im.silverpeas.net/http-bind/', /* BOSH url */
       id : '', /* chat user id */
       password : '', /* chat user password */
-      domain : 'im.silverpeas.net', /* default chat service domain */
+      domain : 'im.silverpeas.net', /* chat service domain */
       language : '', /* the language to use. By default English */
       path : chatPath, /* the path of the silverchat installation */
+      avatar : null, /* the path of the directory with avatars or a function that returns the avatar by a jid (jabber identifier) */
       forceRemote: false, /* force to access the remote XMPP server for group chats (for buggy chat servers) */
       debug: false /* debug mode to display debugging messages in the console */
     },
@@ -120,6 +121,29 @@ var SilverChat = null;
         },
         favicon : {
           enable : false
+        },
+        defaultAvatar : function(jid) {
+          var el = $(this);
+
+          var avatar = new Image();
+          avatar.onerror = function() {
+            jsxc.gui.avatarPlaceholder(el.find('.jsxc_avatar'), jid);
+          };
+          avatar.onload = function() {
+            el.find('.jsxc_avatar').removeAttr('style');
+            el.find('.jsxc_avatar').css({
+              'background-image': 'url(' + avatar.src + ')',
+              'text-indent': '999px'
+            });
+          };
+
+          if (typeof SilverChat.settings.avatar === 'function') {
+            avatar.src = SilverChat.settings.avatar.call(jid);
+          } else if (typeof SilverChat.settings.avatar === 'string') {
+            avatar.src = SilverChat.settings.avatar + '/' + Strophe.getNodeFromJid(jid) + '.jpg';
+          } else {
+            avatar.onerror();
+          }
         }
       });
 
