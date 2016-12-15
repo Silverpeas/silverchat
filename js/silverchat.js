@@ -57,7 +57,7 @@ var SilverChat = null;
       domain : 'im.silverpeas.net', /* default chat service domain */
       language : '', /* the language to use. By default English */
       path : chatPath, /* the path of the silverchat installation */
-      forceGroupChats: false, /* force to load group chats at startup (to use with buggy chat servers) */
+      forceRemote: false, /* force to access the remote XMPP server for group chats (for buggy chat servers) */
       debug: false /* debug mode to display debugging messages in the console */
     },
 
@@ -72,18 +72,35 @@ var SilverChat = null;
         this.settings.path += '/jsxc';
       }
 
-      window.addEventListener("beforeunload", function() {
-        jsxc.xmpp.logout(false);
+      window.top.addEventListener("beforeunload", function() {
+        jsxc.gui.changePresence('offline', true);
+        setTimeout(function() {
+          jsxc.xmpp.logout(true);
 
-        // here we call directly this method to be sure it have time to execute
-        jsxc.xmpp.disconnected();
+          // here we call directly this method to be sure it have time to execute
+          jsxc.xmpp.disconnected();
 
-        // TODO: try to send "presence=unaivalable" from here?
-        jsxc.error("Disconnected before leaving page");
+          jsxc.error("Disconnected before leaving page");
+        }, 0);
 
       }, false);
 
       jsxc.storage.setItem("debug", this.settings.debug);
+
+      if (SilverChat.settings.forceRemote) {
+        // we overrides some functions of the bookmark object to ensure it works directly with
+        // the remote XMPP service instead of the local bookmark in the case the bookmarking support
+        // of XMPP server is enabled but buggy (like with OpenFire).
+        jsxc.xmpp.bookmarks.load = function() {
+          jsxc.debug('Force to load group chats from remote');
+          jsxc.xmpp.bookmarks.loadFromRemote();
+        };
+
+        jsxc.xmpp.bookmarks.add = function(room, alias, nick, autojoin) {
+          jsxc.debug('Force to add group chat to remote');
+          jsxc.xmpp.bookmarks.addToRemote(room, alias, nick, autojoin);
+        };
+      }
 
       jsxc.init({
         app_name : 'Silverpeas',
@@ -134,7 +151,10 @@ var SilverChat = null;
      * @return {SilverChat}
      */
     disconnect : function() {
-      jsxc.xmpp.logout(false);
+      jsxc.gui.changePresence('offline', true);
+      setTimeout(function() {
+        jsxc.xmpp.logout(false);
+      });
       return this;
     },
 

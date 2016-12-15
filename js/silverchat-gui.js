@@ -29,7 +29,7 @@
 SilverChat.gui = {
 
   /**
-   * The roster.
+   * The roster in the SilverChat GUI.
    */
   roster : {
     /**
@@ -234,10 +234,6 @@ SilverChat.gui = {
     // once the roster is ready to be rendered we perform some predefined actions according to
     // the user preferences and to the SilverChat settings.
     $(document).on('ready.roster.jsxc', function() {
-      if (SilverChat.settings.forceGroupChats) {
-        jsxc.debug('Force to load group chats from remote');
-        jsxc.xmpp.bookmarks.loadFromRemote();
-      }
       if (jsxc.notification.isNotificationEnabled()) {
         jsxc.notification.enableNotification();
       } else {
@@ -260,12 +256,14 @@ SilverChat.gui = {
                     rosteritem.removeClass('selected');
                   }).empty()) {
                 $('#new_talk').addClass('jsxc_disabled');
+                $('.silverchat_invite').parent().addClass('jsxc_disabled');
               }
             } else {
               if (SilverChat.gui.roster.selection.add(bid, function() {
                     rosteritem.addClass('selected');
                   }).size() === 1) {
                 $('#new_talk').removeClass('jsxc_disabled');
+                $('.silverchat_invite').parent().removeClass('jsxc_disabled');
               }
             }
           } else {
@@ -282,12 +280,6 @@ SilverChat.gui = {
     $(document).on('receive.invitation.silverchat', function(event, buddy, roomjid, subject) {
       var name = Strophe.getNodeFromJid(roomjid);
       jsxc.debug('Invation to ' + name + ' received from ' + buddy + ' for "' + subject + '"');
-      jsxc.notification.notify({
-        title : $.t('New_invitation', {sender : buddy, room : name}),
-        msg : subject || '',
-        soundFile : jsxc.CONST.SOUNDS.MSG,
-        source : buddy
-      });
 
       jsxc.gui.window.clear(roomjid);
       jsxc.storage.setUserItem('member', roomjid, {});
@@ -296,6 +288,44 @@ SilverChat.gui = {
           true);
 
       jsxc.gui.window.open(roomjid);
+
+      /*jsxc.notification.notify({
+       title : $.t('New_invitation', {sender : buddy, room : name}),
+       msg : subject || '',
+       source : buddy
+       });*/
+    });
+
+    // a chat window is initialized: attach to it a key handler for composing notification
+    $(document).on('init.window.jsxc', function(event, chatWindow) {
+      var type = chatWindow.hasClass('jsxc_groupchat') ? 'groupchat' : 'chat';
+
+      if (type === 'groupchat') {
+        chatWindow.find('.jsxc_menu ul').prepend(
+            $('<li>').append($('<a>').attr('href', '#').addClass('jsxc_disabled').click(function() {
+              if (!$(this).hasClass('jsxc_disabled')) {
+                var room = chatWindow.data('bid');
+                var roomdata = jsxc.storage.getUserItem('buddy', room);
+                jsxc.muc.invite(SilverChat.gui.roster.selection.buddies, room,
+                    roomdata.subject || '');
+                clearSelection();
+              }
+            }).append($('<span>').addClass('silverchat_invite').text($.t('Invite_To_Talk')))));
+      }
+
+      chatWindow.find('.jsxc_textinput').keyup(function() {
+        if (jsxc.xmpp.conn) {
+          var now = new Date().getTime();
+          var last = chatWindow.data('composing-timestamp');
+
+          // send only every 9000ms interval
+          if (!last || (now - last) > 900) {
+            var bid = chatWindow.attr('data-bid');
+            jsxc.xmpp.conn.chatstates.sendComposing(bid, type);
+            chatWindow.data('composing-timestamp', now);
+          }
+        }
+      });
     });
 
     // menu toggling
@@ -330,13 +360,13 @@ SilverChat.gui = {
     // open a new group chat and invite to that group the previously selected buddies
     $('#new_talk').click(function() {
       if (!$(this).hasClass('jsxc_disabled')) {
-        jsxc.gui.dialog.open(jsxc.gui.template.get('chatroom'));
-        var $room = $('#jsxc_dialog #jsxc_room');
-        $room.attr('title', $.t('Chat_room_name_pattern'));
-        $('#new_talk_form').submit(function() {
+        var dialog = jsxc.gui.dialog.open(jsxc.gui.template.get('chatroom'));
+        var $room = dialog.find('#jsxc_room');
+        $room.attr('title', $.t('Chat_room_name_pattern')).focus();
+        $('#new_talk_form').submit(function(event) {
           event.preventDefault();
           var name = $room.val() ||
-              Strophe.getNodeFromJid(jsxc.xmpp.conn.jid) + '_' + new Date().getMilliseconds();
+              Strophe.getNodeFromJid(jsxc.xmpp.conn.jid) + '_' + new Date().getTime();
           var subject = $('#jsxc_dialog #jsxc_subject').val() || '';
 
           var room = jsxc.muc.newRoom(name, subject, true);

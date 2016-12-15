@@ -23,22 +23,54 @@
  */
 
 /**
- * At each connection established, we overrides the function of adding a groupchat into the user's
- * remote bookmark.
- *
- * The actual function in the Strophe Bookmark plugin of adding a groupchat into the user's remote
- * bookmark creates a new conference bookmark set with the groupchat to bookmark. Unfortunately,
- * Ejabberd supports only one conference bookmark set and therefore the previous conference bookmark
- * set is replaced by the new one with the groupchat to bookmark; with this behaviour the user can
- * then bookmark only one groupchat.
- *
- * In order to register several groupchats into the user's bookmark in Ejabberd, the adding function
- * in the Strophe Bookmark plugin is then modified to update the whole remote conference bookmark of
- * the user with the new groupchat to bookmark.
+ * We replaces the handler on the groupchat window initialization by our own in which we remove
+ * some of the menu items.
  */
-$(document).on('connected.jsxc', function() {
+$(document).off('init.window.jsxc', jsxc.muc.initWindow).on('init.window.jsxc',
+    function(event, win) {
+      jsxc.muc.initWindow(event, win);
+      var conf = win.find('.jsxc_settings ul li a.jsxc_configure');
+      if (conf.length >= 1) {
+        conf.parent().remove();
+      }
+    });
+
+/**
+ * When the connection with the remote XMPP server is attached, overrides some methods and registers
+ * some handlers to either fix some behaviours or to perform custom actions.
+ */
+$(document).on('attached.jsxc', function() {
+
+  // register a handler to be informed when a buddy composes a message.
+  jsxc.xmpp.conn.addHandler(jsxc.xmpp.onComposing, 'http://jabber.org/protocol/chatstates',
+      'message');
+
   // we ensure the connection is established and then the jsxc.xmpp.conn is defined and not null
   if (typeof jsxc.xmpp.conn.bookmarks !== 'undefined' && jsxc.xmpp.conn.bookmarks != null) {
+
+    /**
+     * Overrides the function of adding a groupchat into the user's remote bookmark of group chats.
+     *
+     * The actual implementation in the Strophe Bookmark plugin is to add a new bookmark storage
+     * into the Bookmark PubSub node for each group chat to bookmark. This will created several
+     * bookmark storages with a single bookmark. Unfortunately, some XMPP servers like ejabberd
+     * expect there is only one bookmark storage for a user and consequently, with such an
+     * implementation, they replace the previous bookmark storage with the new one and hence
+     * previous bookmarks are lost.
+     *
+     * In order to fix the misbehaviour, the new implementation fetches now the whole bookmark
+     * storage to update it with the new group chat to bookmark and then sends the modified
+     * bookmark storage to the XMPP server. (This was tested with the OpenFire and EJabberd XMPP
+     * servers.)
+     *
+     * @param {string} roomJid the XMPP identifier of the room (group chat) to bookmark.
+     * @param {string} alias the name under which the room has to be bookmarked.
+     * @param {string} nick the nickname of the user in this room.
+     * @param {boolean} autojoin if the room will be automatically joined by the user at each
+     * connection.
+     * @param {function} success the callback to invoke if the group chat bookmarking succeeds.
+     * @param {function} error the callback to invoke if the group chat bookmarking fails.
+     */
     jsxc.xmpp.conn.bookmarks.add = function(roomJid, alias, nick, autojoin, success, error) {
       var self = this;
       var stanza = $iq({
@@ -48,27 +80,103 @@ $(document).on('connected.jsxc', function() {
       }).c('publish', {
         node : Strophe.NS.BOOKMARKS
       }).c('item', {
-        id : 'groupchats'
+        id : 'current'
       }).c('storage', {
         xmlns : Strophe.NS.BOOKMARKS
       });
 
-      function bookmarkGroupChat() {
-        var conferenceAttr = {
-          jid : roomJid, autojoin : autojoin || false
-        };
+      function bookmarkGroupChat(bookmarkit) {
+        if (bookmarkit) {
+          var conferenceAttr = {
+            jid : roomJid, autojoin : autojoin || false
+          };
 
-        if (alias) {
-          conferenceAttr.name = alias;
-        }
+          if (alias) {
+            conferenceAttr.name = alias;
+          }
 
-        stanza.c('conference', conferenceAttr);
-        if (nick) {
-          stanza.c('nick').t(nick);
+          stanza.c('conference', conferenceAttr);
+          if (nick) {
+            stanza.c('nick').t(nick);
+          }
         }
 
         self.connection.sendIQ(stanza, success, error);
       }
+
+      self.get(function(s) {
+        var confs = s.getElementsByTagName('conference');
+        var bookmarked = false;
+        for (var i = 0; i < confs.length; i++) {
+          var conferenceAttr = {
+            jid : confs[i].getAttribute('jid'),
+            autojoin : confs[i].getAttribute('autojoin') || false
+          };
+          var roomName = confs[i].getAttribute('name');
+          var nickname = confs[i].getElementsByTagName('nick');
+
+          if (conferenceAttr.jid === roomJid) {
+            // the room to bookmark is already bookmarked. We update it then.
+            bookmarked = true;
+            conferenceAttr.autojoin = autojoin || false;
+
+            if (alias) {
+              conferenceAttr.name = alias;
+            }
+            stanza.c('conference', conferenceAttr);
+
+            if (nick) {
+              stanza.c('nick').t(nick).up();
+            }
+          } else {
+            if (roomName) {
+              conferenceAttr.name = roomName;
+            }
+            stanza.c('conference', conferenceAttr);
+
+            if (nickname.length === 1) {
+              stanza.c('nick').t(nickname[0].innerHTML).up();
+            }
+          }
+
+          stanza.up();
+        }
+
+        bookmarkGroupChat(!bookmarked);
+      }, function(s) {
+        if (s.getElementsByTagName('item-not-found').length > 0) {
+          bookmarkGroupChat(true);
+          self.connection.sendIQ(stanza, success, error);
+        } else {
+          error(s);
+        }
+      });
+    };
+
+    /**
+     * Overrides the function of deleting a groupchat in the user's remote bookmark of group chats.
+     *
+     * This implementation takes into account the way the group chats are now bookmarked.
+     * The deletion fetches the whole bookmark storage in order to remove from it the group chat to
+     * delete and then it sends the modified bookmark set to the remote XMPP server.
+     *
+     * @param {string} roomJid - The JabberID of the chat roomJid you want to remove
+     * @param {function} [success] - Callback after success
+     * @param {function} [error] - Callback after error
+     */
+    jsxc.xmpp.conn.bookmarks.delete = function(roomJid, success, error) {
+      var self = this;
+      var stanza = $iq({
+        type : 'set'
+      }).c('pubsub', {
+        xmlns : Strophe.NS.PUBSUB
+      }).c('publish', {
+        node : Strophe.NS.BOOKMARKS
+      }).c('item', {
+        id : 'current'
+      }).c('storage', {
+        xmlns : Strophe.NS.BOOKMARKS
+      });
 
       self.get(function(s) {
         var confs = s.getElementsByTagName('conference');
@@ -77,25 +185,24 @@ $(document).on('connected.jsxc', function() {
             jid : confs[i].getAttribute('jid'),
             autojoin : confs[i].getAttribute('autojoin') || false
           };
+          if (conferenceAttr.jid === roomJid) {
+            continue;
+          }
           var roomName = confs[i].getAttribute('name');
           if (roomName) {
             conferenceAttr.name = roomName;
           }
           stanza.c('conference', conferenceAttr);
+
           var nickname = confs[i].getElementsByTagName('nick');
           if (nickname.length === 1) {
-            stanza.c('nick').t(nickname[0].innerHTML);
+            stanza.c('nick').t(nickname[0].innerHTML).up();
           }
-          stanza.up().up();
+          stanza.up();
         }
-
-        bookmarkGroupChat();
+        self.connection.sendIQ(stanza, success, error);
       }, function(s) {
-        if (s.getElementsByTagName('item-not-found').length > 0) {
-          bookmarkGroupChat();
-        } else {
-          error(s);
-        }
+        error(s);
       });
     };
   }
@@ -117,13 +224,8 @@ jsxc.gui.roster.init = function() {
     $('#jsxc_buddylist').addClass('jsxc_hideOffline');
   }
 
-  //jsxc.gui.settings.init();
   // init the GUI of SilverChat
   SilverChat.gui.init();
-
-  /*$('#silverchat_roster .silverchat_settings').click(function() {
-    jsxc.gui.showSettings();
-  });*/
 
   // toggle the roster
   $('#silverchat_roster_header.silverchat_roster_toggle').click(function() {
@@ -283,58 +385,72 @@ jsxc.notification.enableNotification = function(external) {
   }
 };
 
-/*jsxc.xmpp.onReceived = function(stanza) {
+/**
+ * A buddy is composing a messages, informs the current user about it.
+ * @param {xml} stanza the message informing about the state of the chat.
+ * @return {boolean} true: the handler has be kept once the incoming stanza is processed.
+ */
+jsxc.xmpp.onComposing = function(stanza) {
+  var type = $(stanza).attr("type");
+  var from = $(stanza).attr("from");
 
-  // check if composing presence
-  var composing = $(stanza).find("composing[xmlns='http://jabber.org/protocol/chatstates']");
+  // ignore own notifications in groupchat
+  if (type === 'groupchat' &&
+      Strophe.getResourceFromJid(from) === Strophe.getNodeFromJid(jsxc.xmpp.conn.jid)) {
+    return true;
+  }
 
-  if (composing.length > 0) {
+  var bid = jsxc.jidToBid(from);
+  var user = type === 'chat' ? Strophe.getNodeFromJid(from) : Strophe.getResourceFromJid(from);
+  $('#jsxc_windowList .jsxc_windowItem').each(function() {
+    var self = $(this);
+    var winBid = self.data('bid');
 
-    var type = $(stanza).attr("type");
-    var from = $(stanza).attr("from");
+    // check conversation
+    if (winBid === bid) {
+      // add user in array if necessary
+      var usersComposing = self.data('composing') || [];
+      if (usersComposing.indexOf(user) === -1) {
+        usersComposing.push(user);
+        self.data('composing', usersComposing);
+      }
 
-    // ignore own notifications in groupchat
-    if (type === "groupchat" && Strophe.getResourceFromJid(from) === jsxc.xmpp.getCurrentNode()) {
-      return true;
+      var textarea = self.find('.jsxc_textarea');
+      var composingNotif = textarea.find('.silverchat_composing');
+
+      // scroll to bottom
+      jsxc.gui.window.scrollDown(winBid);
+
+      // change text
+      var msg = usersComposing.length > 1 ? $.t('are_composing', {name: usersComposing.join(', ')}):
+          $.t('is_composing', {name: usersComposing[0]});
+
+      if (composingNotif.length < 1) {
+        // notification not present, add it
+        composingNotif = $('<div>').addClass('silverchat_composing')
+            .addClass('jsxc_chatmessage')
+            .addClass('jsxc_sys')
+            .css({opacity : 0, display : 'block'})
+            .html(msg);
+        textarea.append(composingNotif);
+      } else {
+        // notification present, modify it and show it if necessary
+        composingNotif.html(msg);
+      }
+      if (composingNotif.css('opacity') !== '1') {
+        composingNotif.animate({opacity : 1}, 600);
+        setTimeout(function() {
+          composingNotif.animate({opacity : 0}, 600, function() {
+            composingNotif.remove();
+          });
+          self.data('data', []);
+        }, 3000);
+      }
     }
-
-    jsxc.gui.window.showComposingPresence(from, type);
-
-    // stop but keep handler
-    return true;
-  }
-
-  // check if invitation to conference
-  var invitation = $(stanza).find("x[xmlns='jabber:x:conference']");
-
-  if (invitation.length > 0) {
-
-    var buddyName = Strophe.getNodeFromJid($(stanza).attr("from"));
-
-    var roomjid = invitation.attr("jid");
-
-    var reason = invitation.attr("reason");
-    reason = reason ? "Motif: " + reason : "";
-
-    jsxc.notice.add(buddyName + " vous invite à participer à une conversation", "",
-        'gui.showJoinConversationDialog', [roomjid, buddyName]);
-
-    // stop but keep handler
-    return true;
-  }
-
-  // show received acknowledgement
-  var received = $(stanza).find("received[xmlns='urn:xmpp:receipts']");
-
-  if (received.length) {
-    var receivedId = received.attr('id');
-    var message = new jsxc.Message(receivedId);
-
-    message.received();
-  }
+  });
 
   return true;
-}*/
+};
 
 /**
  * Wrapper around the jsxc MUC initialization function to register additional Strophe handlers.
@@ -346,9 +462,10 @@ jsxc.muc.init = function(o) {
 
   // add a handler for incoming direct invitation for a room (group chat)
   jsxc.muc.conn.addHandler(jsxc.muc.onDirectInvitation, 'jabber:x:conference', 'message');
-  
+
   // listen for room status change to set some of the room properties when it is just created
   $(document).on('status.muc.jsxc', function(event, code, room) {
+    jsxc.debug('SATUS MUC CODE FOR ' + room + ' : ' + code);
     if (code === '201') {
       var roomdata = jsxc.storage.getUserItem('buddy', room);
       if (roomdata.persistent) {
@@ -381,7 +498,7 @@ jsxc.muc.init = function(o) {
             }
           }
           jsxc.muc.conn.muc.saveConfiguration(room, form, function() {
-            jsxc.info('The room ' + room + ' is now configured');
+            console.log('The room ' + room + ' is now configured');
           }, function(response) {
             jsxc.error('Error while configuring room ' + room, response);
           });
@@ -393,10 +510,16 @@ jsxc.muc.init = function(o) {
   });
 };
 
+/*jsxc.muc.showJoinChat = function(r) {
+  var room = r ? r : $('#jsxc_room').val();
+  jsxc.debug('Hum ... cannot join the room ' + room);
+};*/
+
 /**
  * A direct invitation for a group chat is received: the event 'receive.invitation.silverchat' is
  * triggered, delegating the treatment to SilverChat.
  * @param {xml} stanza the incoming message.
+ * @return {boolean} true: the handler has be kept once the incoming stanza is processed.
  */
 jsxc.muc.onDirectInvitation = function(stanza) {
   var sender = Strophe.getNodeFromJid($(stanza).attr('from'));

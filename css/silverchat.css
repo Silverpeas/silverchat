@@ -426,3 +426,22 @@ select.silverchat_presence option.jsxc_offline {
   background: #d1deff;
 }
 
+.jsxc_windowItem .silverchat_composing {
+  text-align: center;
+  font-size: 0.9em;
+  font-style: italic;
+}
+.jsxc_windowItem .silverchat_composing:before {
+  content: " ";
+  width: 1.5em;
+  height: 1em;
+  display: inline-block;
+  background-size: 80%;
+  background-repeat: no-repeat;
+  margin: 0 3px 0 0;
+  background-image: url('../img/composing.png');
+}
+
+.jsxc_windowItem .jsxc_window .jsxc_menu .jsxc_verification {
+  display: none; !important;
+}

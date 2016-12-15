@@ -54,9 +54,9 @@ I18next.fr.translation['New_Talk'] = 'Nouvelle discussion';
 I18next.en.translation['New_Talk'] = 'New group chat';
 I18next.de.translation['New_Talk'] = 'New group chat';
 
-I18next.fr.translation['Invite_To_A_Talk'] = 'Inviter dans une discussion';
-I18next.en.translation['Invite_To_A_Talk'] = 'Invite to a group chat';
-I18next.de.translation['Invite_To_A_Talk'] = 'Invite to a group chat';
+I18next.fr.translation['Invite_To_Talk'] = 'Inviter dans la discussion';
+I18next.en.translation['Invite_To_Talk'] = 'Invite to the group chat';
+I18next.de.translation['Invite_To_Talk'] = 'Invite to the group chat';
 
 I18next.fr.translation['New_invitation'] = '__sender__ vous invite à rejoindre la discussion __room__';
 I18next.en.translation['New_invitation'] = '__sender__ invite you to join him the group chat __room__';
@@ -65,3 +65,11 @@ I18next.de.translation['New_invitation'] = '__sender__ invite you to join him th
 I18next.fr.translation['Chat_room_name_pattern'] = 'Pas d\'espaces, pas de caractères accentués ou spéciaux (&"\'/:,;!?<>@)';
 I18next.en.translation['Chat_room_name_pattern'] = 'No spaces, no accented or specials characters (&"\'/:,;!?<>@)';
 I18next.de.translation['Chat_room_name_pattern'] = 'No spaces, no accented or specials characters (&"\'/:,;!?<>@)';
+
+I18next.fr.translation['is_composing'] = '__name__ est en train d\'écrire ...';
+I18next.en.translation['is_composing'] = '__name__ is composing...';
+I18next.de.translation['is_composing'] = '__name__ is composing...';
+
+I18next.fr.translation['are_composing'] = '__name__ sont en train d\'écrire ...';
+I18next.en.translation['are_composing'] = '__name__ are composing...';
+I18next.de.translation['are_composing'] = '__name__ are composing...';
