@@ -51,15 +51,75 @@ var SilverChat = null;
      * client.
      */
     settings : {
-      url : 'https://im.silverpeas.net/http-bind/', /* BOSH url */
-      id : '', /* chat user id */
-      password : '', /* chat user password */
-      domain : 'im.silverpeas.net', /* chat service domain */
-      language : '', /* the language to use. By default English */
-      path : chatPath, /* the path of the silverchat installation */
-      avatar : null, /* the path of the directory with avatars or a function that returns the avatar by a jid (jabber identifier) */
-      forceRemote: false, /* force to access the remote XMPP server for group chats (for buggy chat servers) */
-      debug: false /* debug mode to display debugging messages in the console */
+      /**
+       * The URL of the XMPP's BOSH service with which SilverChat communicates.
+       * @type {string}
+       */
+      url : 'https://im.silverpeas.net/http-bind/',
+
+      /**
+       * The user login to open a connection with the XMPP server.
+       * @type {string}
+       */
+      id : '',
+
+      /**
+       * The user password to open a connection with the XMPP server.
+       * @type {string}
+       */
+      password : '',
+
+      /**
+       * The XMPP domain (or Jabber domain) in which the user is.
+       * @type {string}
+       */
+      domain : 'im.silverpeas.net',
+
+      /**
+       * The ISO 639-1 code of the language to use in the GUI localization. By default, in English.
+       * @type {string}
+       */
+      language : '',
+
+      /**
+       * The path of the installation directory of SilverChat. By default, in the chat directory
+       * relative to the web context (the web context is assumed to be defined in the webContext
+       * variable).
+       * @type {string}
+       */
+      path : chatPath,
+
+      /**
+       * The path of the directory containing the avatars of the user and of its buddies.
+       * The path can be provided by a function that has to accept as argument the JID (Jabber
+       * IDentifier) of the user for which the avatar is asked.
+       * @type {string|function}
+       */
+      avatar : null,
+
+      /**
+       * A function to provide a custom dialog window to select a user with whom he wish to chat.
+       * The function must accept as argument a callback to call with the JID of the selected user.
+       * If no function is set, then the default behaviour is used by SilverChat.
+       * @type {function}
+       */
+      selectUser: null,
+
+      /**
+       * In the case the groupchat bookmark support in the XMPP server is buggy (like with
+       * OpenFire), forces the access to the remote bookmarks in the XMPP server without checking
+       * it supports this capability.
+       * By default, false.
+       * @type {boolean}
+       */
+      forceRemote: false,
+
+      /**
+       * Switchs SilverChat logs in the debug level for displaying debugging messages in the
+       * Javascript console of the web browser. By default, false.
+       * @type {boolean}
+       */
+      debug: false
     },
 
     /**
@@ -117,7 +177,8 @@ var SilverChat = null;
           url : this.settings.url, /* BOSH url */
           domain : this.settings.domain,
           overwrite : true, /* user can overwrite XMPP settings */
-          resource : 'SilverChat'
+          resource : 'SilverChat',
+          searchDomain: this.settings.searchDomain
         },
         favicon : {
           enable : false

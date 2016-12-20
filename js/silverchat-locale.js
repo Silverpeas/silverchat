@@ -73,3 +73,7 @@ I18next.de.translation['is_composing'] = '__name__ is composing...';
 I18next.fr.translation['are_composing'] = '__name__ sont en train d\'écrire ...';
 I18next.en.translation['are_composing'] = '__name__ are composing...';
 I18next.de.translation['are_composing'] = '__name__ are composing...';
+
+I18next.fr.translation['Search_User'] = 'Rechercher un utilisateur par son identifiant';
+I18next.en.translation['Search_User'] = 'Search a user by its identifier';
+I18next.de.translation['Search_User'] = 'Search a user by its identifier';

@@ -239,6 +239,37 @@ SilverChat.gui = {
       } else {
         jsxc.notification.disableNotification();
       }
+
+      if (typeof SilverChat.settings.selectUser !== 'function') {
+        jsxc.xmpp.search.supported().then(function() {
+          SilverChat.settings.selectUser = function(cb) {
+            var dialog = jsxc.gui.dialog.open(jsxc.gui.template.get('usersearch'));
+            dialog.find('#user_id').keyup(function() {
+              var t = $(this).val();
+              if (t && t.length >= 3) {
+                jsxc.xmpp.search.users(t).then(function(users) {
+                  var $list = dialog.find('#found_users');
+                  $.each(users, function(i) {
+                    $('<span>').data('jid', users[i].jid)
+                        .append($('<a>').attr('href', '#')
+                        .html(users[i].fn || Strophe.getNodeFromJid(users[i].jid))
+                            .click(function() {
+                              cb(users[i].jid);
+                              dialog.find('.jsxc_close').click();
+                            })).appendTo($list);
+                  });
+                }, function(error) {
+                  dialog.find('.jsxc_msg').children().remove();
+                  $('<span>').addClass('form-control').html(error.type + ': ' + error.msg)
+                      .appendTo(dialog.find('.jsxc_msg'));
+                });
+              }
+            });
+          };
+        }, function() {
+          $('#search_user').remove();
+        });
+      }
     });
 
     // for each item added into the buddy list, we customize its displaying and we set our own click
@@ -355,6 +386,30 @@ SilverChat.gui = {
       } else {
         jsxc.notification.enableNotification();
       }
+    });
+
+    // search a user and open a chat with him
+    $('#search_user').click(function() {
+      SilverChat.settings.selectUser(function(jid) {
+        var bid = jsxc.jidToBid(jid);
+        if (jsxc.storage.getUserItem('buddylist').indexOf(bid) < 0) {
+          jsxc.storage.setUserItem('buddy', bid, {
+            jid : jid,
+            name : Strophe.getNodeFromJid(jid),
+            status : 0,
+            sub : 'none',
+            msgstate : 0,
+            transferReq : -1,
+            trust : false,
+            res : [],
+            type : 'chat'
+          });
+
+          jsxc.gui.roster.add(bid);
+        }
+
+        jsxc.gui.window.open(bid);
+      });
     });
 
     // open a new group chat and invite to that group the previously selected buddies

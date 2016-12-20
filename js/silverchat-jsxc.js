@@ -211,6 +211,7 @@ $(document).on('attached.jsxc', function() {
 /**
  * Overrides the initialization of the jsxc roster's GUI to customize it.
  * The silverchat GUI is initialized here.
+ * @memberOf jsxc.gui.roster
  */
 jsxc.gui.roster.init = function() {
   var roster = jsxc.gui.template.get('roster');
@@ -294,6 +295,7 @@ jsxc.gui.roster.init = function() {
  * @param state the state to which the roster has to been toggled.
  * @return {number|*} the duration of the transition between the previous state of the roster GUI
  * to the new one.
+ * @memberOf jsxc.gui.roster
  */
 jsxc.gui.roster.toggle = function(state) {
   var duration;
@@ -326,6 +328,7 @@ jsxc.gui.roster.toggle = function(state) {
  * Others are hidden.
  * @param {'chat'|'groupchat'} type the data type attached to the HTML element: either 'chat' for
  * chats with a single buddy or 'groupchat' for chats with several buddies.
+ * @memberOf jsxc.gui
  */
 jsxc.gui.showInBuddyList = function(type) {
   if (type !== 'groupchat' && type !== 'chat') {
@@ -346,6 +349,7 @@ jsxc.gui.showInBuddyList = function(type) {
  * Wrapper around the notify function: it will check if the notification option is enabled before.
  * @type {function}
  * @private
+ * @memberOf jsxc.notification
  */
 jsxc.notification.__notify = jsxc.notification.notify;
 jsxc.notification.notify = function(title, msg, d, force, soundFile, loop, source) {
@@ -358,6 +362,7 @@ jsxc.notification.notify = function(title, msg, d, force, soundFile, loop, sourc
 /**
  * Is the desktop notification enabled?
  * @return {boolean} true if the notification is enabled, false otherwise.
+ * @memberOf jsxc.notification
  */
 jsxc.notification.isNotificationEnabled = function() {
   return !jsxc.storage.getUserItem('disableNotification');
@@ -366,6 +371,7 @@ jsxc.notification.isNotificationEnabled = function() {
 /**
  * Disables the desktop notifications.
  * @param {boolean} external True if triggered from external tab. Default: false.
+ * @memberOf jsxc.notification
  */
 jsxc.notification.disableNotification = function(external) {
   $('#manage_notifications').addClass('mute');
@@ -377,6 +383,7 @@ jsxc.notification.disableNotification = function(external) {
 /**
  * Enables the desktop notifications.
  * @param {boolean} external True if triggered from external tab. Default: false.
+ * @memberOf jsxc.notification
  */
 jsxc.notification.enableNotification = function(external) {
   $('#manage_notifications').removeClass('mute');
@@ -389,6 +396,7 @@ jsxc.notification.enableNotification = function(external) {
  * A buddy is composing a messages, informs the current user about it.
  * @param {xml} stanza the message informing about the state of the chat.
  * @return {boolean} true: the handler has be kept once the incoming stanza is processed.
+ * @memberOf jsxc.xmpp
  */
 jsxc.xmpp.onComposing = function(stanza) {
   var type = $(stanza).attr("type");
@@ -453,7 +461,129 @@ jsxc.xmpp.onComposing = function(stanza) {
 };
 
 /**
+ * Jabber Search according to XEP-0055.
+ *
+ * @namespace jsxc.xmpp.search
+ * @memberOf jsxc.xmpp
+ */
+jsxc.xmpp.search = {};
+
+/**
+ * Checks the Jabber Search is supported by the XMPP server.
+ * @return {Promise} a promise that will invoke the resolve callback if the XMPP server supported
+ * the XEP-055. Otherwise, the reject callback will be called instead.
+ * @memberOf jsxc.xmpp.search
+ */
+jsxc.xmpp.search.supported = function() {
+  var options = jsxc.options.get('xmpp');
+  if (!options.search || typeof options.search.server !== 'string') {
+    jsxc.debug('Discover search service');
+    return new Promise(function (resolve, reject) {
+      jsxc.xmpp.conn.disco.items(Strophe.getDomainFromJid(jsxc.xmpp.conn.jid), null, function(items) {
+        var $items = $(items).find('item');
+        var remains = $items.length;
+        $items.each(function() {
+          var jid = $(this).attr('jid');
+          var discovered = false;
+
+          jsxc.xmpp.conn.disco.info(jid, null, function(info) {
+            var searchFeature = $(info).find('feature[var="jabber:iq:search"]');
+            var searchIdentity = $(info).find('identity[category="directory"][type="user"]');
+
+            if (searchFeature.length > 0 && searchIdentity.length > 0) {
+              jsxc.debug('search service found', jid);
+
+              var o = jsxc.options.get('xmpp');
+              o.search = {
+                server : jid,
+                name : $(info).find('identity').attr('name')
+              };
+              jsxc.options.set('xmpp', o);
+
+              discovered = true;
+
+              resolve();
+              return;
+            }
+
+            if (--remains === 0) {
+              reject();
+            }
+          });
+          return !discovered;
+        });
+      });
+    });
+  }
+  return new Promise(function(resolve) {
+    resolve();
+  });
+};
+
+/**
+ * Gets the Jabber Search domain in the XMPP server.
+ * @return {string} the domain of the search service in the XMPP server.
+ * @private
+ * @memberOf jsxc.xmpp.search
+ */
+jsxc.xmpp.search._domain = function() {
+  var o = jsxc.options.get('xmpp');
+  if (o.search && typeof o.search.server === 'string') {
+    return o.search.server;
+  } else {
+    return o.domain;
+  }
+};
+
+/**
+ * Searches a user whose username or name matches the specified expression.
+ * @param {string} expr a text expression corresponding to a part or to a whole username or name
+ * of a Jabber user.
+ * @return {Promise} a promise of a result. If the search request succeeds, the resolve callback
+ * is called with as argument an array of users matching the expression. Otherwise the reject
+ * callback is invoked with as result an object describing the error:
+ * {code: {number}, type: {string}, reason: {string}}
+ * @memberOf jsxc.xmpp.search
+ */
+jsxc.xmpp.search.users = function(expr) {
+  var iq = $iq({
+    type : 'set', to : jsxc.xmpp.search._domain()
+  }).c('query', {xmlns : 'jabber:iq:search'})
+      .c('x', {xmlns : 'jabber:x:data', type : 'submit'})
+      .c('field', {type : 'hidden', var : 'FORM_TYPE'})
+      .c('value', 'jabber:iq:search').up().up()
+      .c('field', {var : 'user'}).c('value', expr);
+
+  return new Promise(function(resolve, reject) {
+    jsxc.xmpp.conn.sendIQ(iq, function(stanza) {
+      var users = [];
+      $(stanza).find('item').each(function() {
+        var user = {};
+        $(this).find('field').each(function() {
+          user[$(this).attr('var').toLowerCase()] = $(this).text();
+        });
+        users.push(user);
+      });
+      resolve(users);
+    }, function(stanza) {
+      var error = $(stanza).find('error');
+      var code = error.attr('code');
+      var reasons = error.children().map(function() {
+        var tag = $(this).prop('tagName');
+        if (tag && tag === 'text') {
+          return $(this).html();
+        }
+        return tag;
+      });
+      jsxc.error('Error ' + code + ': ' + reasons[0] + ' (' + reasons[1] + ')');
+      reject({code: code, type: reasons[0], msg: reasons[1]});
+    });
+  });
+};
+
+/**
  * Wrapper around the jsxc MUC initialization function to register additional Strophe handlers.
+ * @memberOf jsxc.muc
  * @private
  */
 jsxc.muc.__init = jsxc.muc.init;
@@ -465,7 +595,6 @@ jsxc.muc.init = function(o) {
 
   // listen for room status change to set some of the room properties when it is just created
   $(document).on('status.muc.jsxc', function(event, code, room) {
-    jsxc.debug('SATUS MUC CODE FOR ' + room + ' : ' + code);
     if (code === '201') {
       var roomdata = jsxc.storage.getUserItem('buddy', room);
       if (roomdata.persistent) {
@@ -498,7 +627,7 @@ jsxc.muc.init = function(o) {
             }
           }
           jsxc.muc.conn.muc.saveConfiguration(room, form, function() {
-            console.log('The room ' + room + ' is now configured');
+            jsxc.debug('The room ' + room + ' is now configured');
           }, function(response) {
             jsxc.error('Error while configuring room ' + room, response);
           });
@@ -520,6 +649,7 @@ jsxc.muc.init = function(o) {
  * triggered, delegating the treatment to SilverChat.
  * @param {xml} stanza the incoming message.
  * @return {boolean} true: the handler has be kept once the incoming stanza is processed.
+ * @memberOf jsxc.muc
  */
 jsxc.muc.onDirectInvitation = function(stanza) {
   var sender = Strophe.getNodeFromJid($(stanza).attr('from'));
@@ -539,6 +669,7 @@ jsxc.muc.onDirectInvitation = function(stanza) {
  * @param {array} buddies an array with the JID of the buddies to invite.
  * @param {string} room the room JID.
  * @param {string} reason the reason of the invitation (optional)
+ * @memberOf jsxc.muc
  */
 jsxc.muc.invite = function(buddies, room, reason) {
   for (var i = 0; i < buddies.length; i++) {
@@ -552,6 +683,7 @@ jsxc.muc.invite = function(buddies, room, reason) {
  * information about the room to create).
  * @param {string} name the name of the room.
  * @param {string} subject the reason of the room.
+ * @memberOf jsxc.muc
  */
 jsxc.muc.newRoom = function(name, subject, persistent) {
   if (!name) {
