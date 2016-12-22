@@ -270,11 +270,15 @@ SilverChat.gui = {
           $('#search_user').remove();
         });
       }
+
+      // select the default tab or the one selected in a previous session
+      SilverChat.gui.roster.selectTab(SilverChat.gui.roster.NO_MENU);
     });
 
     // for each item added into the buddy list, we customize its displaying and we set our own click
     // handler.
     $(document).on('add.roster.jsxc', function(event, bid, buddy, rosteritem) {
+      jsxc.debug('A new ' + buddy.type + ' is added in the roster', buddy.jid);
       if (buddy.type !== 'groupchat') {
         rosteritem.find('.jsxc_delete').remove(); // the buddy deletion must be done directly in Silverpeas
         rosteritem.off('click'); // remove the previous click handler defined by JSXC itself

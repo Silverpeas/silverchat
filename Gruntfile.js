@@ -22,6 +22,8 @@ module.exports = function(grunt) {
         }, {
           expand : true, src : ['img/**'], dest : '<%= target %>/'
         }, {
+          expand : true, src : ['lib/**'], dest : '<%= target %>/'
+        }, {
           expand : true, src : ['js/silverchat.js'], dest : '<%= target %>/'
         }]
       }
