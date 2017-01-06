@@ -58,6 +58,24 @@ var SilverChat = null;
       url : 'http://im.silverpeas.net:5280/http-bind/',
 
       /**
+       * The definition of an ICE service to enable the video chat capability. It is defined by the
+       * following object:
+       * {
+       *   server: {string}    the hostname or IP address of a ICE server with its port number.
+       *                       (for example ice.silverpeas.net:80)
+       *   auth: {boolean}     is an authentication must be performed to access the STUN service?
+       *   user: {string}      the user identifier used to authenticate the client to the STUN
+       *                       service. If missing and auth is true, then the current user
+       *                       identifier is used. Optional.
+       *   password: {string}  the password associated with the user identifier to authenticate the
+       *                       the client to the STUN service. If user is set, this attribute is
+       *                       mandatory. Optional.
+       * }
+       * If no such service is defined, then the video chat capability is disabled.
+       */
+      ice : null,
+
+      /**
        * The user login to open a connection with the XMPP server.
        * @type {string}
        */
@@ -119,7 +137,7 @@ var SilverChat = null;
       forceRemote: false,
 
       /**
-       * Switchs SilverChat logs in the debug level for displaying debugging messages in the
+       * Switches SilverChat logs in the debug level for displaying debugging messages in the
        * Javascript console of the web browser. By default, false.
        * @type {boolean}
        */
@@ -167,7 +185,7 @@ var SilverChat = null;
         };
       }
 
-      jsxc.init({
+      var jsxcOptions = {
         app_name : 'Silverpeas',
         logoutElement : $('#logout'),
         root : this.settings.path,
@@ -216,7 +234,33 @@ var SilverChat = null;
             avatar.onerror();
           }
         }
-      });
+      };
+
+      if (SilverChat.settings.ice !== null) {
+        jsxcOptions.RTCPeerConfig = {
+          iceServers: [
+            {
+              urls: 'stun:' + SilverChat.settings.ice.server
+            },
+            {
+              urls: 'turn:' + SilverChat.settings.ice.server
+            }
+          ]
+        };
+        if (SilverChat.settings.ice.auth) {
+          var id = SilverChat.settings.id;
+          var password = SilverChat.settings.password;
+          if (SilverChat.settings.ice.user) {
+            id = SilverChat.settings.ice.user;
+            password = SilverChat.settings.ice.password;
+          }
+          jsxcOptions.RTCPeerConfig.iceServers[1].username = id;
+          jsxcOptions.RTCPeerConfig.iceServers[1].credential = password;
+          jsxcOptions.RTCPeerConfig.iceServers[1].credentialType = 'password';
+        }
+      }
+
+      jsxc.init(jsxcOptions);
 
       return this;
     },

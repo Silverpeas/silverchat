@@ -316,8 +316,11 @@ SilverChat.gui = {
 
     // a chat window is initialized: attach to it a key handler for composing notification
     $(document).on('init.window.jsxc', function(event, chatWindow) {
+      if (SilverChat.settings.ice === null) {
+        jsxc.debug('ICE service not found: video chat disabled!');
+        chatWindow.find('.jsxc_video').remove();
+      }
       var type = chatWindow.hasClass('jsxc_groupchat') ? 'groupchat' : 'chat';
-
       if (type === 'groupchat') {
         chatWindow.find('.jsxc_menu ul').prepend(
             $('<li>').append($('<a>').attr('href', '#').addClass('jsxc_disabled').click(function() {

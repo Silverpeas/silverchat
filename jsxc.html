@@ -35,6 +35,34 @@
         url: 'http://im.silverpeas.net:5280/http-bind/',
         domain: 'im.silverpeas.net',
         resource: 'SilverChat'
+      },
+      RTCPeerConfig: {
+        iceServers: [
+          /*{
+            "urls": "stun:turn1.silverpeas.net:80"
+          },
+          {
+            "urls": "turns:turn1.silverpeas.net:443",
+            "credential": "orv227EAdGEZ_ldSMadxhmbSxtnmvnMx",
+            "credentialType": "password",
+            "username": "djoe"
+          },
+          {
+            "urls": "turn:turn1.silverpeas.net:80",
+            "credential": "orv227EAdGEZ_ldSMadxhmbSxtnmvnMx",
+            "credentialType": "password",
+            "username": "djoe"
+          }*/
+          {
+            "urls":"stun:212.83.142.6:3478"
+          },
+          {
+            "urls":"turn:212.83.142.6:3478",
+            "username":"toto",
+            "credential":"azerty",
+            "credentialType":"password"
+          }
+        ]
       }
     });
   });

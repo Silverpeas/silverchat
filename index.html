@@ -13,7 +13,7 @@
   <script src="jsxc/jsxc.min.js"></script>
   <script src="lib/strophe.chatstates.js"></script>
   <!-- SilverChat and its dependencies -->
-  <script src="build/js/silverchat.min.js"></script>
+  <script src="build/js/silverchat.js"></script>
   <!-- CSS -->
   <link href="https://code.jquery.com/ui/1.11.4/themes/ui-lightness/jquery-ui.css" media="all" rel="stylesheet" type="text/css"/>
   <link href="jsxc/css/jsxc.css" media="all" rel="stylesheet" type="text/css"/>
@@ -33,6 +33,10 @@
         path : '.',
         id : $('#username').val(),
         password : $('#password').val(),
+        ice : {
+          server: 'im.silverpeas.net:3478',
+          auth: true
+        },
         language : 'fr',
         debug: true,
         avatar: '.'

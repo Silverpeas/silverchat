@@ -7,9 +7,9 @@
   font-size: 13px;
 }
 
-.jsxc_video {
+/*.jsxc_video {
   display: none!important;
-}
+}*/
 
 .jsxc_bar {
   background-color: #1c94d4;
@@ -460,3 +460,14 @@
   opacity:1;
 }
 
+
+#silverchat_video {
+  z-index: 10000;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  overflow: auto;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  height: 40%;
+}
