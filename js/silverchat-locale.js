@@ -77,3 +77,7 @@ I18next.de.translation['are_composing'] = '__name__ are composing...';
 I18next.fr.translation['Search_User'] = 'Rechercher un utilisateur par son identifiant';
 I18next.en.translation['Search_User'] = 'Search a user by its identifier';
 I18next.de.translation['Search_User'] = 'Search a user by its identifier';
+
+I18next.fr.translation['You_have_received_message_from_'] = 'Vous avez reçu un message de ';
+I18next.en.translation['You_have_received_message_from_'] = 'You have received a message from ';
+I18next.de.translation['You_have_received_message_from_'] = 'You have received a message from ';

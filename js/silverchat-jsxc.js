@@ -45,6 +45,9 @@ $(document).on('attached.jsxc', function() {
   jsxc.xmpp.conn.addHandler(jsxc.xmpp.onComposing, 'http://jabber.org/protocol/chatstates',
       'message');
 
+  // register a handler to be informed about the reception of a message coming from an unknown user.
+  jsxc.xmpp.conn.addHandler(jsxc.xmpp.onMessageFromStranger, null, 'message', 'chat');
+
   // we ensure the connection is established and then the jsxc.xmpp.conn is defined and not null
   if (typeof jsxc.xmpp.conn.bookmarks !== 'undefined' && jsxc.xmpp.conn.bookmarks != null) {
 
@@ -393,6 +396,77 @@ jsxc.notification.enableNotification = function(external) {
 };
 
 /**
+ * A stanger has sent a message to you.
+ * @param {xml} stanza the message.
+ */
+jsxc.xmpp.onMessageFromStranger = function(stanza) {
+  var forwarded = $(stanza).find('forwarded[xmlns="' + jsxc.CONST.NS.FORWARD + '"]');
+  var message;
+  if (forwarded.length > 0) {
+    message = forwarded.find('> message');
+    forwarded = true;
+  } else {
+    message = stanza;
+    forwarded = false;
+  }
+
+  var body = $(message).find('body:first').text();
+  var delay = $(message).find('delay[xmlns="urn:xmpp:delay"]');
+  var stamp = (delay.length > 0) ? new Date(delay.attr('stamp')) : new Date();
+  stamp = stamp.getTime();
+  var from = $(message).attr('from');
+  var jid = Strophe.getBareJidFromJid(from);
+  var bid = jsxc.jidToBid(jid);
+  var data = jsxc.storage.getUserItem('buddy', bid);
+  if (jsxc.storage.getUserItem('buddylist').indexOf(bid) < 0) {
+    if (data === null && body) {
+      jsxc.debug('Message coming from a stranger: ' + bid);
+      // jid not in roster, then the sender is a stranger
+      var chat = jsxc.storage.getUserItem('chat', bid) || [];
+      if (chat.length === 0) {
+        jsxc.gui.dialog.close();
+        jsxc.gui.dialog.open(jsxc.gui.template.get('newchat'), {
+          'noClose' : true
+        });
+
+        $('#jsxc_dialog .jsxc_their_jid').text(Strophe.getNodeFromJid(jid));
+        $('#jsxc_dialog .jsxc_deny').click(function(e) {
+          e.stopPropagation();
+          jsxc.gui.dialog.close();
+        });
+        $('#jsxc_dialog .jsxc_approve').click(function(e) {
+          e.stopPropagation();
+          jsxc.storage.setUserItem('buddy', bid, {
+            jid : jid,
+            name : Strophe.getNodeFromJid(jid),
+            status : 0,
+            sub : 'none',
+            msgstate : 0,
+            transferReq : -1,
+            trust : false,
+            res : [],
+            type : 'chat'
+          });
+
+          jsxc.gui.window.init(bid);
+          jsxc.gui.window.postMessage({
+            bid: bid,
+            direction: jsxc.Message.IN,
+            msg: body,
+            encrypted: false,
+            forwarded: forwarded,
+            stamp: stamp
+          });
+          jsxc.gui.dialog.close();
+        });
+      }
+    }
+  }
+
+  return true;
+};
+
+/**
  * A buddy is composing a messages, informs the current user about it.
  * @param {xml} stanza the message informing about the state of the chat.
  * @return {boolean} true: the handler has be kept once the incoming stanza is processed.
@@ -652,6 +726,9 @@ jsxc.muc.init = function(o) {
  * @memberOf jsxc.muc
  */
 jsxc.muc.onDirectInvitation = function(stanza) {
+  if ($(stanza).find("x[xmlns='" + Strophe.NS.MUC_USER + "'")) {
+    return;
+  }
   var sender = Strophe.getNodeFromJid($(stanza).attr('from'));
   var invitation = $(stanza).find("x[xmlns='jabber:x:conference']");
   var roomjid = invitation.attr('jid');

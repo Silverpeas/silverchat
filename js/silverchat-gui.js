@@ -409,10 +409,11 @@ SilverChat.gui = {
             type : 'chat'
           });
 
-          jsxc.gui.roster.add(bid);
+          //jsxc.gui.roster.add(bid);
         }
 
         jsxc.gui.window.open(bid);
+
       });
     });
 
