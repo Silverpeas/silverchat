@@ -36,20 +36,6 @@
   cursor:pointer;
 }
 
-/* settings in the roster header
-#silverchat_roster .silverchat_settings {
-  cursor: pointer;
-  background: url('../img/toggle-settings-menu_white.svg') no-repeat;
-  background-size: 90%;
-  content: ' ';
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  vertical-align: middle;
-  float: right;
-  margin: 0.7em;
-}*/
-
 #silverchat_roster .notification_count {
   background-color: #ffa500;
   border-radius: 11px;
@@ -66,7 +52,6 @@
 }
 
 #silverchat_roster_body {
-  /*height: 480px;*/
   overflow: hidden;
   width: 100%;
 }
@@ -80,7 +65,7 @@
   clear: both;
   bottom: 0;
   position: absolute;
-  top: 75px;
+  top: 76px;
   left: 0;
   right: 0;
 }
@@ -141,7 +126,7 @@
   text-decoration: none;
   text-transform: uppercase;
   width:50%;
-  background: #f5f5f5 url(../img/bg-select-chat.png) bottom right no-repeat;
+  background: #f5f5f5 url(../img/packIconsChat.png) bottom right no-repeat;
 }
 #silverchat_buddies_filter{
   width:40%;
@@ -150,8 +135,8 @@
 
 #silverchat_groupchats_filter.selected,
 #silverchat_buddies_filter.selected {
-    color: #1c94d4 ;
-    background-position: bottom left;
+  color: #1c94d4 ;
+  background-position: bottom left;
 }
 
 #silverchat_roster_tabs {
@@ -191,7 +176,7 @@
 }
 
 #new_talk:before {
-  background: url('../img/packIconsChat.png') 0 -72px no-repeat;
+  background: url('../img/packIconsChat.png') 0 -295px no-repeat;
 }
 
 #invite_talk:before {
@@ -288,56 +273,6 @@
   margin-left: 5px;
 }
 
-.silverchat_stateIndicator.jsxc_enabled {
-  background: url('../img/check.svg');
-  background-size: 90%;
-  background-repeat: no-repeat;
-  content: ' ';
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-}
-
-.silverchat_stateIndicator.jsxc_disabled {
-  background-image: url('../jsxc/img/padlock_open_disabled_black.svg');;
-  background-size: 90%;
-  background-repeat: no-repeat;
-  content: ' ';
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-}
-
-/*select.silverchat_presence {
-  background:transparent;
-  width:200px;
-  border: none;
-  outline: none;
-  height:21px;
-}
-
-select.silverchat_presence option {
-  position:relative;
-  padding-left:20px;
-}
-
-select.silverchat_presence option.jsxc_online {
-}
-select.silverchat_presence option.jsxc_chat {
-  background:transparent url(../jsxc/img/presence_chat.svg) 4px -70px no-repeat;
-}
-
-select.silverchat_presence option.jsxc_away {
-  background:transparent url(../jsxc/img/presence_xa.svg) 4px -70px no-repeat;
-}
-
-select.silverchat_presence option.jsxc_dnd {
-  background:transparent url(../jsxc/img/presence_dnd.svg) 4px -70px no-repeat;
-}
-
-select.silverchat_presence option.jsxc_offline {
-}*/
-
 #silverchat_roster_footer  {
   position: absolute;
   left: 0;
@@ -345,7 +280,7 @@ select.silverchat_presence option.jsxc_offline {
   width: 100%;
   line-height: 34px;
   height: 34px;
-  z-index: 50;
+  z-index: 100;
   padding:0;
 }
 
@@ -442,10 +377,8 @@ select.silverchat_presence option.jsxc_offline {
   width: 1.5em;
   height: 1em;
   display: inline-block;
-  background-size: 80%;
-  background-repeat: no-repeat;
   margin: 0 3px 0 0;
-  background-image: url('../img/composing.png');
+  background: url('../img/packIconsChat.png') 0 -650px no-repeat;
 }
 
 .jsxc_windowItem .jsxc_window .jsxc_menu .jsxc_verification {
@@ -454,6 +387,11 @@ select.silverchat_presence option.jsxc_offline {
 
 .jsxc_bar {
   color: #eee;
+}
+
+
+.jsxc_rosteritem .jsxc_caption input {
+  width:130px;
 }
 .jsxc_min .jsxc_caption .jsxc_name {
   height: auto;
