@@ -398,7 +398,7 @@
   line-height: 40px;
 }
 /* buddy menu */
-.jsxc_menu {
+.jsxc_rosteritem .jsxc_menu {
   position: fixed;
   right: 38px;
 }
