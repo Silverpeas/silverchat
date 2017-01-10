@@ -258,7 +258,7 @@ jsxc.gui.roster.init = function() {
   // scroll the content of the buddy list (chats)
   $('#jsxc_buddylist').slimScroll({
     distance: '3px',
-    height: ($('#silverchat_roster').height() - 31) + 'px',
+   /* height: ($('#silverchat_roster').height() - 31) + 'px',*/
     width: $('#jsxc_buddylist').width() + 'px',
     color: '#fff',
     opacity: '0.5'
