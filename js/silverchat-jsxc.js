@@ -368,7 +368,7 @@ jsxc.gui.showUnknownSender = function(bid) {
 
     jsxc.storage.saveBuddy(bid, {
       jid: bid,
-      name: bid,
+      name: Strophe.getNodeFromJid(bid),
       status: 0,
       sub: 'none',
       res: []
