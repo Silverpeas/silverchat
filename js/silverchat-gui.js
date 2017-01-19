@@ -235,40 +235,13 @@ SilverChat.gui = {
     // the user preferences and to the SilverChat settings.
     $(document).on('ready.roster.jsxc', function() {
       if (jsxc.notification.isNotificationEnabled()) {
-        jsxc.notification.enableNotification();
+        $('#manage_notifications').removeClass('mute');
       } else {
-        jsxc.notification.disableNotification();
+        $('#manage_notifications').addClass('mute');
       }
 
       if (typeof SilverChat.settings.selectUser !== 'function') {
-        jsxc.xmpp.search.supported().then(function() {
-          SilverChat.settings.selectUser = function(cb) {
-            var dialog = jsxc.gui.dialog.open(jsxc.gui.template.get('usersearch'));
-            dialog.find('#user_id').keyup(function() {
-              var t = $(this).val();
-              if (t && t.length >= 3) {
-                jsxc.xmpp.search.users(t).then(function(users) {
-                  var $list = dialog.find('#found_users');
-                  $.each(users, function(i) {
-                    $('<span>').data('jid', users[i].jid)
-                        .append($('<a>').attr('href', '#')
-                        .html(users[i].fn || Strophe.getNodeFromJid(users[i].jid))
-                            .click(function() {
-                              cb(users[i].jid);
-                              dialog.find('.jsxc_close').click();
-                            })).appendTo($list);
-                  });
-                }, function(error) {
-                  dialog.find('.jsxc_msg').children().remove();
-                  $('<span>').addClass('form-control').html(error.type + ': ' + error.msg)
-                      .appendTo(dialog.find('.jsxc_msg'));
-                });
-              }
-            });
-          };
-        }, function() {
-          $('#search_user').remove();
-        });
+        $('#search_user').remove();
       }
 
       // select the default tab or the one selected in a previous session
@@ -280,12 +253,22 @@ SilverChat.gui = {
     $(document).on('add.roster.jsxc', function(event, bid, buddy, rosteritem) {
       jsxc.debug('A new ' + buddy.type + ' is added in the roster', buddy.jid);
       if (buddy.type !== 'groupchat') {
-        rosteritem.find('.jsxc_delete').remove(); // the buddy deletion must be done directly in Silverpeas
+        if (buddy.sub !== 'none') {
+          // the buddy is a Silverpeas contact: the buddy deletion must be done directly in
+          // Silverpeas
+          rosteritem.find('.jsxc_delete').remove();
+        }
         rosteritem.off('click'); // remove the previous click handler defined by JSXC itself
         rosteritem.click(function(event) {
           // when the CTRL key is pressed while clicking on the buddy item, then the item is
           // just selected for further action. Otherwise the chat window is simply opened.
           if (event.ctrlKey) {
+            var data = jsxc.storage.getUserItem('buddy', bid);
+            if (data === null || data.sub === 'none') {
+              // no subscription. Peculiar case of a buddy was added in the roster without any
+              // subscription (used for chatting with users that aren't friends)
+              return;
+            }
             if (rosteritem.hasClass('selected')) {
               if (SilverChat.gui.roster.selection.remove(bid, function() {
                     rosteritem.removeClass('selected');
@@ -324,11 +307,11 @@ SilverChat.gui = {
 
       jsxc.gui.window.open(roomjid);
 
-      /*jsxc.notification.notify({
+      jsxc.notification.notify({
        title : $.t('New_invitation', {sender : buddy, room : name}),
        msg : subject || '',
        source : buddy
-       });*/
+       });
     });
 
     // a chat window is initialized: attach to it a key handler for composing notification
@@ -384,32 +367,51 @@ SilverChat.gui = {
         return;
       }
 
-      // invert current choice in notification
-      if (jsxc.notification.isNotificationEnabled()) {
-        jsxc.notification.disableNotification();
+      if (window.Notification.permission !== 'granted') {
+        window.Notification.requestPermission().then(function(status) {
+          switch(status) {
+            case 'granted':
+              jsxc.notification.enableNotification();
+              break;
+            case 'denied':
+              jsxc.notification.disableNotification();
+              break;
+          }
+        });
       } else {
-        jsxc.notification.enableNotification();
+        if (jsxc.notification.isNotificationEnabled()) {
+          jsxc.notification.disableNotification();
+        } else {
+          jsxc.notification.enableNotification();
+        }
       }
     });
 
     // search a user and open a chat with him
     $('#search_user').click(function() {
-      SilverChat.settings.selectUser(function(jid) {
+      SilverChat.settings.selectUser(function(jid, alias) {
+        jsxc.debug('Add user ' + jid + ' into my roster');
         var bid = jsxc.jidToBid(jid);
         if (jsxc.storage.getUserItem('buddylist').indexOf(bid) < 0) {
-          jsxc.storage.setUserItem('buddy', bid, {
-            jid : jid,
-            name : Strophe.getNodeFromJid(jid),
-            status : 0,
-            sub : 'none',
-            msgstate : 0,
-            transferReq : -1,
-            trust : false,
-            res : [],
-            type : 'chat'
-          });
+          if (jsxc.master) {
+            // add buddy to roster (trigger onRosterChanged)
+            var iq = $iq({
+              type: 'set'
+            }).c('query', {
+              xmlns: 'jabber:iq:roster'
+            }).c('item', {
+              jid: jid,
+              name: alias || Strophe.getNodeFromJid(jid)
+            }).c('group').t('xmpp');
+            jsxc.xmpp.conn.sendIQ(iq);
 
-          //jsxc.gui.roster.add(bid);
+            jsxc.storage.removeUserItem('add_' + bid);
+          } else {
+            jsxc.storage.setUserItem('add_' + bid, {
+              username: jid,
+              alias: alias || Strophe.getNodeFromJid(jid)
+            });
+          }
         }
 
         jsxc.gui.window.open(bid);

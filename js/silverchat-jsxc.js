@@ -45,9 +45,6 @@ $(document).on('attached.jsxc', function() {
   jsxc.xmpp.conn.addHandler(jsxc.xmpp.onComposing, 'http://jabber.org/protocol/chatstates',
       'message');
 
-  // register a handler to be informed about the reception of a message coming from an unknown user.
-  jsxc.xmpp.conn.addHandler(jsxc.xmpp.onMessageFromStranger, null, 'message', 'chat');
-
   // we ensure the connection is established and then the jsxc.xmpp.conn is defined and not null
   if (typeof jsxc.xmpp.conn.bookmarks !== 'undefined' && jsxc.xmpp.conn.bookmarks != null) {
 
@@ -349,9 +346,47 @@ jsxc.gui.showInBuddyList = function(type) {
 };
 
 /**
+ * Shows a dialog box to inform the user about the incoming of a message from an unknown sender.
+ * Overrides this method to take into account our own confirmation call GUI.
+ * @param bid the buddy identifier of the sender. Identical to the JID for unknown senders.
+ * @memberOf jsxc.gui
+ */
+jsxc.gui.showUnknownSender = function(bid) {
+  jsxc.gui.dialog.open(jsxc.gui.template.get('newchat'), {
+    'noClose' : true
+  });
+
+  $('#jsxc_dialog .jsxc_their_jid').text(Strophe.getNodeFromJid(bid));
+
+  $('#jsxc_dialog .jsxc_deny').click(function() {
+    jsxc.storage.removeUserItem('chat', bid);
+    jsxc.gui.dialog.close();
+  });
+
+  $('#jsxc_dialog .jsxc_approve').click(function() {
+    jsxc.gui.dialog.close();
+
+    jsxc.storage.saveBuddy(bid, {
+      jid: bid,
+      name: bid,
+      status: 0,
+      sub: 'none',
+      res: []
+    });
+
+    var chat = jsxc.storage.getUserItem('chat', bid) || [];
+    for(var i = 0; i < chat.length; i++) {
+      jsxc.gui.window.postMessage(chat[i]);
+    }
+    jsxc.storage.removeUserItem('chat', bid);
+
+    jsxc.gui.window.open(bid);
+  });
+};
+
+/**
  * Wrapper around the notify function: it will check if the notification option is enabled before.
  * @type {function}
- * @private
  * @memberOf jsxc.notification
  */
 jsxc.notification.__notify = jsxc.notification.notify;
@@ -368,7 +403,7 @@ jsxc.notification.notify = function(title, msg, d, force, soundFile, loop, sourc
  * @memberOf jsxc.notification
  */
 jsxc.notification.isNotificationEnabled = function() {
-  return !jsxc.storage.getUserItem('disableNotification');
+  return jsxc.storage.getUserItem('notification') === 1;
 };
 
 /**
@@ -377,9 +412,11 @@ jsxc.notification.isNotificationEnabled = function() {
  * @memberOf jsxc.notification
  */
 jsxc.notification.disableNotification = function(external) {
-  $('#manage_notifications').addClass('mute');
   if (external !== true) {
-    jsxc.storage.setUserItem('disableNotification', true);
+    jsxc.debug('Disable desktop notifications');
+    $('#manage_notifications').addClass('mute');
+    jsxc.options.notification = false;
+    jsxc.storage.setUserItem('notification', 0);
   }
 };
 
@@ -389,81 +426,62 @@ jsxc.notification.disableNotification = function(external) {
  * @memberOf jsxc.notification
  */
 jsxc.notification.enableNotification = function(external) {
-  $('#manage_notifications').removeClass('mute');
   if (external !== true) {
-    jsxc.storage.setUserItem('disableNotification', false);
+    jsxc.debug('Enable desktop notifications');
+    $('#manage_notifications').removeClass('mute');
+    jsxc.notification.init();
+    jsxc.storage.setUserItem('notification', 1);
   }
 };
 
 /**
- * A stanger has sent a message to you.
- * @param {xml} stanza the message.
+ * Wrapper around the notice adding to multicast the notification of the event to the different
+ * parts of the GUI.
+ * @memberOf jsxc.notice
  */
-jsxc.xmpp.onMessageFromStranger = function(stanza) {
-  var forwarded = $(stanza).find('forwarded[xmlns="' + jsxc.CONST.NS.FORWARD + '"]');
-  var message;
-  if (forwarded.length > 0) {
-    message = forwarded.find('> message');
-    forwarded = true;
-  } else {
-    message = stanza;
-    forwarded = false;
-  }
+jsxc.notice.__add = jsxc.notice.add;
+jsxc.notice.add = function(msg, description, fnName, fnParams, id) {
+  jsxc.notice.__add(msg, description, fnName, fnParams, id);
+  $('#silverchat_notice > span').text(jsxc.notice._num);
+  $('#jsxc_notice ul').addClass('silverchat_menu_item');
+};
 
-  var body = $(message).find('body:first').text();
-  var delay = $(message).find('delay[xmlns="urn:xmpp:delay"]');
-  var stamp = (delay.length > 0) ? new Date(delay.attr('stamp')) : new Date();
-  stamp = stamp.getTime();
-  var from = $(message).attr('from');
-  var jid = Strophe.getBareJidFromJid(from);
-  var bid = jsxc.jidToBid(jid);
-  var data = jsxc.storage.getUserItem('buddy', bid);
-  if (jsxc.storage.getUserItem('buddylist').indexOf(bid) < 0) {
-    if (data === null && body) {
-      jsxc.debug('Message coming from a stranger: ' + bid);
-      // jid not in roster, then the sender is a stranger
-      var chat = jsxc.storage.getUserItem('chat', bid) || [];
-      if (chat.length === 0) {
-        jsxc.gui.dialog.close();
-        jsxc.gui.dialog.open(jsxc.gui.template.get('newchat'), {
-          'noClose' : true
-        });
+/**
+ * Wrapper around the notice removing to multicast the notification of the event to the different
+ * parts of the GUI.
+ * @memberOf jsxc.notice
+ */
+jsxc.notice.__remove = jsxc.notice.remove;
+jsxc.notice.remove = function(nid) {
+  jsxc.notice.__remove(nid);
+  $('#silverchat_notice > span').text(jsxc.notice._num || '');
+};
 
-        $('#jsxc_dialog .jsxc_their_jid').text(Strophe.getNodeFromJid(jid));
-        $('#jsxc_dialog .jsxc_deny').click(function(e) {
-          e.stopPropagation();
-          jsxc.gui.dialog.close();
-        });
-        $('#jsxc_dialog .jsxc_approve').click(function(e) {
-          e.stopPropagation();
-          jsxc.storage.setUserItem('buddy', bid, {
-            jid : jid,
-            name : Strophe.getNodeFromJid(jid),
-            status : 0,
-            sub : 'none',
-            msgstate : 0,
-            transferReq : -1,
-            trust : false,
-            res : [],
-            type : 'chat'
-          });
-
-          jsxc.gui.window.init(bid);
-          jsxc.gui.window.postMessage({
-            bid: bid,
-            direction: jsxc.Message.IN,
-            msg: body,
-            encrypted: false,
-            forwarded: forwarded,
-            stamp: stamp
-          });
-          jsxc.gui.dialog.close();
-        });
-      }
-    }
-  }
-
-  return true;
+/**
+ * Saves an incoming message into the user storage for future treatment. This method is used by
+ * jsxc when a message is received from an unknown sender, that is to say a sender that is not
+ * in the user's roster.
+ * @param bid the buddy identifier of the sender.
+ * @param direction the direction of the message ('in' for incoming message, 'out' for output
+ * message, etc.)
+ * @param msg the message body.
+ * @param encrypted is the message encrypted?
+ * @param forwarded is a message that was forwarded by another user?
+ * @param stamp the timestamp of the message.
+ * @memberOf jsxc.storage.
+ */
+jsxc.storage.saveMessage = function(bid, direction, msg, encrypted, forwarded, stamp) {
+  var chat = jsxc.storage.getUserItem('chat', bid) || [];
+  chat.push({
+    bid : bid,
+    direction : direction,
+    msg : msg,
+    encrypted : encrypted,
+    forwarded : forwarded,
+    stamp : stamp,
+    attachment : null
+  });
+  jsxc.storage.setUserItem('chat', bid, chat);
 };
 
 /**
@@ -535,127 +553,6 @@ jsxc.xmpp.onComposing = function(stanza) {
 };
 
 /**
- * Jabber Search according to XEP-0055.
- *
- * @namespace jsxc.xmpp.search
- * @memberOf jsxc.xmpp
- */
-jsxc.xmpp.search = {};
-
-/**
- * Checks the Jabber Search is supported by the XMPP server.
- * @return {Promise} a promise that will invoke the resolve callback if the XMPP server supported
- * the XEP-055. Otherwise, the reject callback will be called instead.
- * @memberOf jsxc.xmpp.search
- */
-jsxc.xmpp.search.supported = function() {
-  var options = jsxc.options.get('xmpp');
-  if (!options.search || typeof options.search.server !== 'string') {
-    jsxc.debug('Discover search service');
-    return new Promise(function (resolve, reject) {
-      jsxc.xmpp.conn.disco.items(Strophe.getDomainFromJid(jsxc.xmpp.conn.jid), null, function(items) {
-        var $items = $(items).find('item');
-        var remains = $items.length;
-        $items.each(function() {
-          var jid = $(this).attr('jid');
-          var discovered = false;
-
-          jsxc.xmpp.conn.disco.info(jid, null, function(info) {
-            var searchFeature = $(info).find('feature[var="jabber:iq:search"]');
-            var searchIdentity = $(info).find('identity[category="directory"][type="user"]');
-
-            if (searchFeature.length > 0 && searchIdentity.length > 0) {
-              jsxc.debug('search service found', jid);
-
-              var o = jsxc.options.get('xmpp');
-              o.search = {
-                server : jid,
-                name : $(info).find('identity').attr('name')
-              };
-              jsxc.options.set('xmpp', o);
-
-              discovered = true;
-
-              resolve();
-              return;
-            }
-
-            if (--remains === 0) {
-              reject();
-            }
-          });
-          return !discovered;
-        });
-      });
-    });
-  }
-  return new Promise(function(resolve) {
-    resolve();
-  });
-};
-
-/**
- * Gets the Jabber Search domain in the XMPP server.
- * @return {string} the domain of the search service in the XMPP server.
- * @private
- * @memberOf jsxc.xmpp.search
- */
-jsxc.xmpp.search._domain = function() {
-  var o = jsxc.options.get('xmpp');
-  if (o.search && typeof o.search.server === 'string') {
-    return o.search.server;
-  } else {
-    return o.domain;
-  }
-};
-
-/**
- * Searches a user whose username or name matches the specified expression.
- * @param {string} expr a text expression corresponding to a part or to a whole username or name
- * of a Jabber user.
- * @return {Promise} a promise of a result. If the search request succeeds, the resolve callback
- * is called with as argument an array of users matching the expression. Otherwise the reject
- * callback is invoked with as result an object describing the error:
- * {code: {number}, type: {string}, reason: {string}}
- * @memberOf jsxc.xmpp.search
- */
-jsxc.xmpp.search.users = function(expr) {
-  var iq = $iq({
-    type : 'set', to : jsxc.xmpp.search._domain()
-  }).c('query', {xmlns : 'jabber:iq:search'})
-      .c('x', {xmlns : 'jabber:x:data', type : 'submit'})
-      .c('field', {type : 'hidden', var : 'FORM_TYPE'})
-      .c('value', 'jabber:iq:search').up().up()
-      .c('field', {var : 'user'}).c('value', expr);
-
-  return new Promise(function(resolve, reject) {
-    jsxc.xmpp.conn.sendIQ(iq, function(stanza) {
-      var users = [];
-      $(stanza).find('item').each(function() {
-        var user = {};
-        $(this).find('field').each(function() {
-          user[$(this).attr('var').toLowerCase()] = $(this).text();
-        });
-        users.push(user);
-      });
-      resolve(users);
-    }, function(stanza) {
-      var error = $(stanza).find('error');
-      var code = error.attr('code');
-      var reasons = error.children().map(function() {
-        var tag = $(this).prop('tagName');
-        if (tag && tag === 'text') {
-          return $(this).html();
-        }
-        return tag;
-      });
-      jsxc.error('Error ' + code + ': ' + reasons[0] + ' (' + reasons[1] + ')');
-      reject({code: code, type: reasons[0], msg: reasons[1]});
-    });
-  });
-};
-
-/**
  * Wrapper around the jsxc MUC initialization function to register additional Strophe handlers.
  * @memberOf jsxc.muc
  * @private
@@ -713,11 +610,6 @@ jsxc.muc.init = function(o) {
   });
 };
 
-/*jsxc.muc.showJoinChat = function(r) {
-  var room = r ? r : $('#jsxc_room').val();
-  jsxc.debug('Hum ... cannot join the room ' + room);
-};*/
-
 /**
  * A direct invitation for a group chat is received: the event 'receive.invitation.silverchat' is
  * triggered, delegating the treatment to SilverChat.
@@ -726,7 +618,7 @@ jsxc.muc.init = function(o) {
  * @memberOf jsxc.muc
  */
 jsxc.muc.onDirectInvitation = function(stanza) {
-  if ($(stanza).find("x[xmlns='" + Strophe.NS.MUC_USER + "'")) {
+  if ($(stanza).find("x[xmlns='" + Strophe.NS.MUC_USER + "']").length > 0) {
     return;
   }
   var sender = Strophe.getNodeFromJid($(stanza).attr('from'));

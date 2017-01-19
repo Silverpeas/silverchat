@@ -55,7 +55,7 @@ var SilverChat = null;
        * The URL of the XMPP's BOSH service with which SilverChat communicates.
        * @type {string}
        */
-      url : 'https://im.silverpeas.net/http-bind/',
+      url : 'http://im.silverpeas.net:5280/http-bind/',
 
       /**
        * The user login to open a connection with the XMPP server.
@@ -98,9 +98,13 @@ var SilverChat = null;
       avatar : null,
 
       /**
-       * A function to provide a custom dialog window to select a user with whom he wish to chat.
-       * The function must accept as argument a callback to call with the JID of the selected user.
-       * If no function is set, then the default behaviour is used by SilverChat.
+       * A function to provide a custom and an external way to select a user with whom the current
+       * user wish to chat. The selected user will be then added into the current user's roster
+       * but no presence subscription will be performed.
+       *
+       * The function must accept as argument a callback to call with as parameters the JID of the
+       * selected user and optionally the name (or alias) of the selected user.
+       * If no function is set, then the user selection menu item is removed.
        * @type {function}
        */
       selectUser: null,
@@ -184,6 +188,12 @@ var SilverChat = null;
           enable : false
         },
         defaultAvatar : function(jid) {
+          var data = jsxc.storage.getUserItem('buddy', jid);
+          if (data !== null && data.type === 'groupchat') {
+            jsxc.gui.avatarPlaceholder($(this).find('.jsxc_avatar'), jid);
+            return;
+          }
+
           var el = $(this);
 
           var avatar = new Image();

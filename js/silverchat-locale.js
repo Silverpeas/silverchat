@@ -81,3 +81,7 @@ I18next.de.translation['Search_User'] = 'Search a user by its identifier';
 I18next.fr.translation['You_have_received_message_from_'] = 'Vous avez reçu un message de ';
 I18next.en.translation['You_have_received_message_from_'] = 'You have received a message from ';
 I18next.de.translation['You_have_received_message_from_'] = 'You have received a message from ';
+
+I18next.fr.translation['Events'] = 'Evenements';
+I18next.en.translation['Events'] = 'Events';
+I18next.de.translation['Events'] = 'Events';
