@@ -412,9 +412,9 @@ SilverChat.gui = {
               alias: alias || Strophe.getNodeFromJid(jid)
             });
           }
+        } else {
+          jsxc.gui.window.open(bid);
         }
-
-        jsxc.gui.window.open(bid);
 
       });
     });
