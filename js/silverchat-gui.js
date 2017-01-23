@@ -225,6 +225,7 @@ SilverChat.gui = {
    * It is actually invoked by the jsxc roster UI initialization.
    */
   init : function() {
+
     function clearSelection() {
       SilverChat.gui.roster.selection.remove();
       $('.jsxc_rosteritem.selected').removeClass('selected');

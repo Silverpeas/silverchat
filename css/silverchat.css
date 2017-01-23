@@ -7,10 +7,6 @@
   font-size: 13px;
 }
 
-/*.jsxc_video {
-  display: none!important;
-}*/
-
 .jsxc_bar {
   background-color: #1c94d4;
 }
@@ -422,7 +418,7 @@
 }
 
 .jsxc_windowItem .jsxc_window .jsxc_menu .jsxc_verification {
-  display: none; !important;
+  display: none !important;
 }
 
 .jsxc_bar {
@@ -460,14 +456,47 @@
   opacity:1;
 }
 
-
-#silverchat_video {
-  z-index: 10000;
+#jsxc_webrtc {
+  z-index: 10;
   position: fixed;
   top: 0px;
   left: 0px;
   overflow: auto;
   width: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  height: 40%;
+  background: rgba(0, 0, 0, 0.8)!important;
+  height: 300px!important;
+}
+
+#jsxc_webrtc.jsxc_state_hidden {
+  display: block;
+  top:-250px;
+  -webkit-transition: top 0.5s;
+  transition: top 0.5s;
+}
+
+#jsxc_webrtc.jsxc_state_shown {
+  display: block;
+  -webkit-transition: top 0.5s;
+  transition: top 0.5s;
+}
+
+@media (min-width: 768px) {
+  .jsxc_videoContainer {
+    right: 0px !important;
+  }
+
+  .jsxc_controlbar {
+    bottom: -2px!important;
+  }
+}
+
+.jsxc_remotevideo {
+  min-width: 200px;
+  min-height: 200px;
+  z-index: 9000;
+  background-color: #999999;
+}
+
+.jsxc_toggleVideo {
+  background: white url('../img/packIconsChat.png') right -550px no-repeat;
 }

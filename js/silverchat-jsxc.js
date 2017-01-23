@@ -53,13 +53,13 @@ $(document).on('attached.jsxc', function() {
      *
      * The actual implementation in the Strophe Bookmark plugin is to add a new bookmark storage
      * into the Bookmark PubSub node for each group chat to bookmark. This will created several
-     * bookmark storages with a single bookmark. Unfortunately, some XMPP servers like ejabberd
-     * expect there is only one bookmark storage for a user and consequently, with such an
-     * implementation, they replace the previous bookmark storage with the new one and hence
+     * bookmark storage node with a single bookmark. Unfortunately, some XMPP servers like ejabberd
+     * expect there is only one bookmark storage node for a user and consequently, with such an
+     * implementation, they replace the previous bookmark storage node with the new one and hence
      * previous bookmarks are lost.
      *
      * In order to fix the misbehaviour, the new implementation fetches now the whole bookmark
-     * storage to update it with the new group chat to bookmark and then sends the modified
+     * storage node to update it with the new group chat to bookmark and then sends the modified
      * bookmark storage to the XMPP server. (This was tested with the OpenFire and EJabberd XMPP
      * servers.)
      *
@@ -382,6 +382,74 @@ jsxc.gui.showUnknownSender = function(bid) {
 
     jsxc.gui.window.open(bid);
   });
+};
+
+/**
+ * Display the window for video call. Overrides this method to take into account our own video chat
+ * GUI instead of the jsxc default one.
+ *
+ * @memberOf jsxc.gui
+ */
+jsxc.gui.showVideoWindow = function(jid) {
+
+  var self = jsxc.webrtc;
+
+  // needed to trigger complete.dialog.jsxc
+  jsxc.gui.dialog.close();
+
+  $('body').append(jsxc.gui.template.get('videochat').addClass('jsxc_state_shown'));
+
+  var localVideo = $('#jsxc_webrtc .jsxc_localvideo');
+  var remoteVideo = $('#jsxc_webrtc .jsxc_remotevideo');
+
+  // mute own video element to avoid echoes
+  localVideo[0].muted = true;
+  localVideo[0].volume = 0;
+
+  if (self.localStream) {
+    self.attachMediaStream(localVideo, self.localStream);
+  }
+
+  if (self.remoteStream) {
+    self.attachMediaStream(remoteVideo, self.remoteStream);
+    $('#jsxc_webrtc .jsxc_' +
+        (self.remoteStream.getVideoTracks().length > 0 ? 'remotevideo' : 'noRemoteVideo'))
+        .addClass('jsxc_deviceAvailable');
+  }
+
+  $('#jsxc_webrtc .jsxc_hangUp').click(function() {
+    jsxc.webrtc.hangUp('success');
+  });
+
+  $('#jsxc_webrtc .jsxc_fullscreen').click(function() {
+      $('#jsxc_webrtc .jsxc_videoContainer').fullscreen();
+  });
+
+  $('#jsxc_webrtc .jsxc_videoContainer').click(function() {
+    $('#jsxc_webrtc .jsxc_controlbar').toggleClass('jsxc_visible');
+  });
+
+  $('#jsxc_webrtc .jsxc_toggleVideo').click(function() {
+    if ($('#jsxc_webrtc').hasClass('jsxc_state_shown')) {
+      $('#jsxc_webrtc').removeClass('jsxc_state_shown').addClass('jsxc_state_hidden');
+    } else {
+      $('#jsxc_webrtc').removeClass('jsxc_state_hidden').addClass('jsxc_state_shown');
+    }
+  });
+
+  jsxc.gui.window.open(jsxc.jidToBid(jid));
+
+  return $('#jsxc_webrtc');
+};
+
+/**
+ * Close the window for video call. Overrides this method to take into account our own video chat
+ * GUI instead of the jsxc default one.
+ *
+ * @memberOf jsxc.gui
+ */
+jsxc.gui.closeVideoWindow = function() {
+   $('#jsxc_webrtc').remove();
 };
 
 /**
