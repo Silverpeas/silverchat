@@ -36,19 +36,53 @@
   cursor:pointer;
 }
 
-#silverchat_roster .notification_count {
-  background-color: #ffa500;
-  border-radius: 11px;
-  color: #000;
-  font-size: 80%;
-  padding: 2px;
-  position: relative;
+#silverchat_roster_header  #silverchat_notice {
+  background:#1c94d4 url(../img/bulle-notification.png) 0 0 no-repeat;
+  width:34px;
+  line-height: 27px;
+  height:30px;
+  position:absolute;
+  right:0;
+  top:0;
+  text-align:center;
+  font-weight:bold;
   -webkit-animation: bounce 2s 1s infinite;
   animation: bounce 2s 1s infinite;
 }
 
-#silverchat_roster .notification_count:empty {
-  display: none;
+#silverchat_roster_menu #jsxc_notice {
+  height: auto; 
+  width: auto; 
+  float: none; 
+  text-align: left; 
+  line-height: 30px;
+}
+
+#silverchat_roster_menu #jsxc_notice .silverchat_menu_item {
+  padding: 0em;
+  margin: 0em 0.5em 0em 0.3em;
+  border-bottom: 1px solid #f9e98e;
+}
+
+#silverchat_roster_menu #jsxc_notice .silverchat_menu_item  li {
+  background:#fbf7aa;
+  border-top: 1px solid #f9e98e;
+}
+#silverchat_roster_menu #jsxc_notice span {
+  display:inline-block;
+  background:#FFF url(../img/bulle-notification.png) 0 0 no-repeat;
+  border-radius: 0;
+  color: #FFF;
+  width:34px;
+  line-height: 27px;
+  height:30px;
+  font-size:100%;
+  padding: 0;
+  position: relative;
+  text-align:center;
+  font-weight:bold;
+  -webkit-animation: bounce 2s 1s infinite;
+  animation: bounce 2s 1s infinite;
 }
 
 #silverchat_roster_body {
