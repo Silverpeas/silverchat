@@ -33,7 +33,7 @@
 }
 
 #silverchat_roster_header  #silverchat_notice span{
-  background:#1c94d4 url(../img/bulle-notification.png) 0 0 no-repeat;
+  background:#1c94d4 url(../img/packIconsChat.png) right -199px no-repeat;
   width:34px;
   line-height: 27px;
   height:30px;
@@ -69,7 +69,7 @@
 }
 #silverchat_roster_menu #jsxc_notice span {
   display:inline-block;
-  background:#FFF url(../img/bulle-notification.png) 0 0 no-repeat;
+  background:#FFF url(../img/packIconsChat.png) right -199px no-repeat;
   border-radius: 0;
   color: #FFF;
   width:34px;
@@ -486,7 +486,7 @@
   }
 
   .jsxc_controlbar {
-    bottom: -2px!important;
+    bottom: 5px;
   }
 }
 
@@ -497,6 +497,19 @@
   background-color: #999999;
 }
 
-.jsxc_toggleVideo {
-  background: white url('../img/packIconsChat.png') right -550px no-repeat;
+.jsxc_controlbar .jsxc_toggleVideo {
+  background:transparent url('../img/packIconsChat.png') right -62px no-repeat;
+  background-size:inherit
+}
+
+.jsxc_controlbar.jsxc_visible .jsxc_toggleVideo {
+  background:transparent url('../img/packIconsChat.png') right -106px no-repeat;
+  background-size:inherit
+}
+
+.jsxc_localvideo{
+  border: 3px solid #efefef;
+}
+.jsxc_videoContainer{
+  border-bottom: 1px solid #656565;
 }
