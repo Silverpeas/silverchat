@@ -108,13 +108,177 @@ SilverChat.gui = {
     },
 
     /**
+     * Initializes the roster GUI of SilverChat. All actions related to the roster are set up here.
+     */
+    init: function() {
+      // for each item added into the buddy list, we customize its displaying and we set our own
+      // click handler.
+      $(document).on('add.roster.jsxc', function(event, bid, buddy, rosteritem) {
+        jsxc.debug('A new ' + buddy.type + ' is added in the roster', buddy.jid);
+        if (buddy.type !== 'groupchat') {
+          if (buddy.sub !== 'none') {
+            // the buddy is a Silverpeas contact: the buddy deletion must be done directly in
+            // Silverpeas
+            rosteritem.find('.jsxc_delete').remove();
+          }
+          rosteritem.off('click'); // remove the previous click handler defined by JSXC itself
+          rosteritem.click(function(event) {
+            // when the CTRL key is pressed while clicking on the buddy item, then the item is
+            // just selected for further action. Otherwise the chat window is simply opened.
+            if (event.ctrlKey) {
+              var data = jsxc.storage.getUserItem('buddy', bid);
+              if (data === null || data.sub === 'none') {
+                // no subscription. Peculiar case of a buddy was added in the roster without any
+                // subscription (used for chatting with users that aren't friends)
+                return;
+              }
+              if (rosteritem.hasClass('selected')) {
+                if (SilverChat.gui.roster.selection.remove(bid, function() {
+                      rosteritem.removeClass('selected');
+                    }).empty()) {
+                  $('#new_talk').addClass('jsxc_disabled');
+                  $('.silverchat_invite').parent().addClass('jsxc_disabled');
+                }
+              } else {
+                if (SilverChat.gui.roster.selection.add(bid, function() {
+                      rosteritem.addClass('selected');
+                    }).size() === 1) {
+                  $('#new_talk').removeClass('jsxc_disabled');
+                  $('.silverchat_invite').parent().removeClass('jsxc_disabled');
+                }
+              }
+            } else {
+              SilverChat.gui.roster.clearSelection();
+              jsxc.gui.window.open(bid);
+            }
+          });
+        }
+        // a chat or a group chat is added: hide the menu and render the content of the actual tab
+        SilverChat.gui.roster.selectTab(SilverChat.gui.roster.NO_MENU);
+      });
+
+      // toggle the menu to display the events
+      $('#silverchat_notice').click(function(event) {
+        event.stopPropagation();
+        jsxc.gui.roster.toggle(jsxc.CONST.SHOWN);
+        SilverChat.gui.roster.toggleMenu(jsxc.CONST.SHOWN);
+      });
+
+      // menu toggling
+      $('#silverchat_roster_menu_toggle').click(function() {
+        SilverChat.gui.roster.toggleMenu();
+      });
+
+      // buddies tab displaying
+      $('#silverchat_buddies_filter').click(function() {
+        SilverChat.gui.roster.selectTab(SilverChat.gui.roster.BUDDIES);
+      });
+
+      // group chats tab displaying
+      $('#silverchat_groupchats_filter').click(function() {
+        SilverChat.gui.roster.selectTab(SilverChat.gui.roster.TALKS);
+      });
+
+      // notification management
+      $('#manage_notifications').click(function() {
+        if (jsxc.storage.getUserItem('presence') === 'dnd') {
+          return;
+        }
+
+        if (window.Notification.permission !== 'granted') {
+          window.Notification.requestPermission().then(function(status) {
+            switch(status) {
+              case 'granted':
+                jsxc.notification.enableNotification();
+                break;
+              case 'denied':
+                jsxc.notification.disableNotification();
+                break;
+            }
+          });
+        } else {
+          if (jsxc.notification.isNotificationEnabled()) {
+            jsxc.notification.disableNotification();
+          } else {
+            jsxc.notification.enableNotification();
+          }
+        }
+      });
+
+      // search a user and open a chat with him
+      $('#search_user').click(function() {
+        SilverChat.settings.selectUser(function(jid, alias) {
+          jsxc.debug('Add user ' + jid + ' into my roster');
+          var bid = jsxc.jidToBid(jid);
+          if (jsxc.storage.getUserItem('buddylist').indexOf(bid) < 0) {
+            if (jsxc.master) {
+              // add buddy to roster (trigger onRosterChanged)
+              var iq = $iq({
+                type: 'set'
+              }).c('query', {
+                xmlns: 'jabber:iq:roster'
+              }).c('item', {
+                jid: jid,
+                name: alias || Strophe.getNodeFromJid(jid)
+              }).c('group').t('xmpp');
+              jsxc.xmpp.conn.sendIQ(iq);
+
+              jsxc.storage.removeUserItem('add_' + bid);
+            } else {
+              jsxc.storage.setUserItem('add_' + bid, {
+                username: jid,
+                alias: alias || Strophe.getNodeFromJid(jid)
+              });
+            }
+          } else {
+            jsxc.gui.window.open(bid);
+          }
+
+        });
+      });
+
+      // open a new group chat and invite to that group the previously selected buddies
+      $('#new_talk').click(function() {
+        if (!$(this).hasClass('jsxc_disabled')) {
+          var dialog = jsxc.gui.dialog.open(jsxc.gui.template.get('chatroom'));
+          var $room = dialog.find('#jsxc_room');
+          $room.attr('title', $.t('Chat_room_name_pattern')).focus();
+          $('#new_talk_form').submit(function(event) {
+            event.preventDefault();
+            var name = $room.val() ||
+                Strophe.getNodeFromJid(jsxc.xmpp.conn.jid) + '_' + new Date().getTime();
+            var subject = $('#jsxc_dialog #jsxc_subject').val() || '';
+
+            var room = jsxc.muc.newRoom(name, subject, true);
+
+            jsxc.muc.invite(SilverChat.gui.roster.selection.buddies, room, subject);
+
+            SilverChat.gui.roster.clearSelection();
+          });
+        }
+      });
+    },
+
+    clearSelection: function() {
+      SilverChat.gui.roster.selection.remove();
+      $('.jsxc_rosteritem.selected').removeClass('selected');
+      $('#new_talk').addClass('jsxc_disabled');
+    },
+
+    /**
      * Toggles the menu. If the menu is already displayed, then hides it and the content of the
      * selected tab is shown, otherwise the content of the menu replace the content of the
      * selected tab.
+     * @param state {string} the state of the menu to force to: either jsxc.CONST.HIDDEN or
+     * jsxc.CONST.SHOWN. Optional.
      */
-    toggleMenu : function() {
+    toggleMenu : function(state) {
       var actual = jsxc.storage.getUserItem('roster_content');
-      if (actual > this._MENU) {
+      if ((actual > this._MENU && state === jsxc.CONST.SHOWN) || (actual <= this._MENU &&
+          state === jsxc.CONST.HIDDEN)) {
+        return;
+      }
+      if (actual > this._MENU || state === jsxc.CONST.HIDDEN) {
         // the menu is shown, then hide it
         this.selectTab(this.NO_MENU);
       } else {
@@ -222,78 +386,16 @@ SilverChat.gui = {
 
   /**
    * Initializes the GUI of the chat client.
-   * It is actually invoked by the jsxc roster UI initialization.
+   * It is actually invoked once the JSXC roster initialization is performed; triggered by the
+   * 'ready.roster.jsxc' event.
+   * All the actions related to the GUI of SilverChat are initialized and defined here.
    */
   init : function() {
 
-    function clearSelection() {
-      SilverChat.gui.roster.selection.remove();
-      $('.jsxc_rosteritem.selected').removeClass('selected');
-      $('#new_talk').addClass('jsxc_disabled');
-    }
+    jsxc.debug('Init SilverChat GUI');
 
-    // once the roster is ready to be rendered we perform some predefined actions according to
-    // the user preferences and to the SilverChat settings.
-    $(document).on('ready.roster.jsxc', function() {
-      if (jsxc.notification.isNotificationEnabled()) {
-        $('#manage_notifications').removeClass('mute');
-      } else {
-        $('#manage_notifications').addClass('mute');
-      }
-
-      if (typeof SilverChat.settings.selectUser !== 'function') {
-        $('#search_user').remove();
-      }
-
-      // select the default tab or the one selected in a previous session
-      SilverChat.gui.roster.selectTab(SilverChat.gui.roster.NO_MENU);
-    });
-
-    // for each item added into the buddy list, we customize its displaying and we set our own click
-    // handler.
-    $(document).on('add.roster.jsxc', function(event, bid, buddy, rosteritem) {
-      jsxc.debug('A new ' + buddy.type + ' is added in the roster', buddy.jid);
-      if (buddy.type !== 'groupchat') {
-        if (buddy.sub !== 'none') {
-          // the buddy is a Silverpeas contact: the buddy deletion must be done directly in
-          // Silverpeas
-          rosteritem.find('.jsxc_delete').remove();
-        }
-        rosteritem.off('click'); // remove the previous click handler defined by JSXC itself
-        rosteritem.click(function(event) {
-          // when the CTRL key is pressed while clicking on the buddy item, then the item is
-          // just selected for further action. Otherwise the chat window is simply opened.
-          if (event.ctrlKey) {
-            var data = jsxc.storage.getUserItem('buddy', bid);
-            if (data === null || data.sub === 'none') {
-              // no subscription. Peculiar case of a buddy was added in the roster without any
-              // subscription (used for chatting with users that aren't friends)
-              return;
-            }
-            if (rosteritem.hasClass('selected')) {
-              if (SilverChat.gui.roster.selection.remove(bid, function() {
-                    rosteritem.removeClass('selected');
-                  }).empty()) {
-                $('#new_talk').addClass('jsxc_disabled');
-                $('.silverchat_invite').parent().addClass('jsxc_disabled');
-              }
-            } else {
-              if (SilverChat.gui.roster.selection.add(bid, function() {
-                    rosteritem.addClass('selected');
-                  }).size() === 1) {
-                $('#new_talk').removeClass('jsxc_disabled');
-                $('.silverchat_invite').parent().removeClass('jsxc_disabled');
-              }
-            }
-          } else {
-            clearSelection();
-            jsxc.gui.window.open(bid);
-          }
-        });
-      }
-      // a chat or a group chat is added: hide the menu and render the content of the actual tab
-      SilverChat.gui.roster.selectTab(SilverChat.gui.roster.NO_MENU);
-    });
+    // initializes the roster of our own.
+    SilverChat.gui.roster.init();
 
     // invitation for a group chat is received from a buddy.
     $(document).on('receive.invitation.silverchat', function(event, buddy, roomjid, subject) {
@@ -330,7 +432,7 @@ SilverChat.gui = {
                 var roomdata = jsxc.storage.getUserItem('buddy', room);
                 jsxc.muc.invite(SilverChat.gui.roster.selection.buddies, room,
                     roomdata.subject || '');
-                clearSelection();
+                SilverChat.gui.roster.clearSelection();
               }
             }).append($('<span>').addClass('silverchat_invite').text($.t('Invite_To_Talk')))));
       }
@@ -350,98 +452,19 @@ SilverChat.gui = {
       });
     });
 
-    // menu toggling
-    $('#silverchat_roster_menu_toggle').click(function() {
-      SilverChat.gui.roster.toggleMenu();
-    });
+    // once the roster is ready to be rendered we perform some predefined actions according to
+    // the user preferences and to the SilverChat settings.
+    if (jsxc.notification.isNotificationEnabled()) {
+      $('#manage_notifications').removeClass('mute');
+    } else {
+      $('#manage_notifications').addClass('mute');
+    }
 
-    // buddies tab displaying
-    $('#silverchat_buddies_filter').click(function() {
-      SilverChat.gui.roster.selectTab(SilverChat.gui.roster.BUDDIES);
-    });
+    if (typeof SilverChat.settings.selectUser !== 'function') {
+      $('#search_user').remove();
+    }
 
-    // group chats tab displaying
-    $('#silverchat_groupchats_filter').click(function() {
-      SilverChat.gui.roster.selectTab(SilverChat.gui.roster.TALKS);
-    });
-
-    // notification management
-    $('#manage_notifications').click(function() {
-      if (jsxc.storage.getUserItem('presence') === 'dnd') {
-        return;
-      }
-
-      if (window.Notification.permission !== 'granted') {
-        window.Notification.requestPermission().then(function(status) {
-          switch(status) {
-            case 'granted':
-              jsxc.notification.enableNotification();
-              break;
-            case 'denied':
-              jsxc.notification.disableNotification();
-              break;
-          }
-        });
-      } else {
-        if (jsxc.notification.isNotificationEnabled()) {
-          jsxc.notification.disableNotification();
-        } else {
-          jsxc.notification.enableNotification();
-        }
-      }
-    });
-
-    // search a user and open a chat with him
-    $('#search_user').click(function() {
-      SilverChat.settings.selectUser(function(jid, alias) {
-        jsxc.debug('Add user ' + jid + ' into my roster');
-        var bid = jsxc.jidToBid(jid);
-        if (jsxc.storage.getUserItem('buddylist').indexOf(bid) < 0) {
-          if (jsxc.master) {
-            // add buddy to roster (trigger onRosterChanged)
-            var iq = $iq({
-              type: 'set'
-            }).c('query', {
-              xmlns: 'jabber:iq:roster'
-            }).c('item', {
-              jid: jid,
-              name: alias || Strophe.getNodeFromJid(jid)
-            }).c('group').t('xmpp');
-            jsxc.xmpp.conn.sendIQ(iq);
-
-            jsxc.storage.removeUserItem('add_' + bid);
-          } else {
-            jsxc.storage.setUserItem('add_' + bid, {
-              username: jid,
-              alias: alias || Strophe.getNodeFromJid(jid)
-            });
-          }
-        } else {
-          jsxc.gui.window.open(bid);
-        }
-
-      });
-    });
-
-    // open a new group chat and invite to that group the previously selected buddies
-    $('#new_talk').click(function() {
-      if (!$(this).hasClass('jsxc_disabled')) {
-        var dialog = jsxc.gui.dialog.open(jsxc.gui.template.get('chatroom'));
-        var $room = dialog.find('#jsxc_room');
-        $room.attr('title', $.t('Chat_room_name_pattern')).focus();
-        $('#new_talk_form').submit(function(event) {
-          event.preventDefault();
-          var name = $room.val() ||
-              Strophe.getNodeFromJid(jsxc.xmpp.conn.jid) + '_' + new Date().getTime();
-          var subject = $('#jsxc_dialog #jsxc_subject').val() || '';
-
-          var room = jsxc.muc.newRoom(name, subject, true);
-
-          jsxc.muc.invite(SilverChat.gui.roster.selection.buddies, room, subject);
-
-          clearSelection();
-        });
-      }
-    });
+    // select the default tab or the one selected in a previous session
+    SilverChat.gui.roster.selectTab(SilverChat.gui.roster.NO_MENU);
   }
 };

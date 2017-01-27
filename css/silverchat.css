@@ -457,7 +457,7 @@
 }
 
 #jsxc_webrtc {
-  z-index: 10;
+  z-index: 1000!important;
   position: fixed;
   top: 0px;
   left: 0px;

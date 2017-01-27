@@ -145,7 +145,8 @@ var SilverChat = null;
     },
 
     /**
-     * Initializes the silverpeas chat client.
+     * Initializes the silverpeas chat client. It bootstraps JSXC and its own customization of
+     * JSXC.
      * @param options the options to override the default settings.
      * @return {SilverChat}
      */

@@ -209,8 +209,8 @@ $(document).on('attached.jsxc', function() {
 });
 
 /**
- * Overrides the initialization of the jsxc roster's GUI to customize it.
- * The silverchat GUI is initialized here.
+ * Overrides the initialization of the jsxc roster's GUI to customize it: we replace the roster GUI
+ * of JSXC by our own.
  * @memberOf jsxc.gui.roster
  */
 jsxc.gui.roster.init = function() {
@@ -229,8 +229,10 @@ jsxc.gui.roster.init = function() {
   SilverChat.gui.init();
 
   // toggle the roster
-  $('#silverchat_roster_header.silverchat_roster_toggle').click(function() {
-    jsxc.gui.roster.toggle();
+  $('#silverchat_roster_header.silverchat_roster_toggle').click(function(event) {
+    if (!event.isPropagationStopped()) {
+      jsxc.gui.roster.toggle();
+    }
   });
 
   // change the presence according to the click on the presence item
