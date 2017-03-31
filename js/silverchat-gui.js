@@ -436,20 +436,6 @@ SilverChat.gui = {
               }
             }).append($('<span>').addClass('silverchat_invite').text($.t('Invite_To_Talk')))));
       }
-
-      chatWindow.find('.jsxc_textinput').keyup(function() {
-        if (jsxc.xmpp.conn) {
-          var now = new Date().getTime();
-          var last = chatWindow.data('composing-timestamp');
-
-          // send only every 9000ms interval
-          if (!last || (now - last) > 900) {
-            var bid = chatWindow.attr('data-bid');
-            jsxc.xmpp.conn.chatstates.sendComposing(bid, type);
-            chatWindow.data('composing-timestamp', now);
-          }
-        }
-      });
     });
 
     // once the roster is ready to be rendered we perform some predefined actions according to
