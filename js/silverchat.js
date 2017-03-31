@@ -1,5 +1,5 @@
 /*!
- * Copyright (C) 2000-2016 Silverpeas
+ * Copyright (C) 2000-2017 Silverpeas
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -23,18 +23,19 @@
  */
 
 /**
- * The chat client of Silverpeas.
+ * The chat client for Silverpeas.
+ * It is based upon JSXC (https://www.jsxc.org/)
  */
 var SilverChat = null;
 
 (function($) {
   "use strict";
 
-  if (typeof jsxc === 'undefined' || jsxc === null) {
-    return;
+  if (typeof jsxc === 'undefined' || typeof Strophe === 'undefined') {
+    throw new Error('SilverChat dependencies not defined: jsxc and Strophe');
   }
 
-  if (!window.webContext) {
+  if (window.webContext === null) {
     window.webContext = '.';
   }
   var chatPath = window.webContext + '/chat';
@@ -128,15 +129,6 @@ var SilverChat = null;
       selectUser: null,
 
       /**
-       * In the case the groupchat bookmark support in the XMPP server is buggy (like with
-       * OpenFire), forces the access to the remote bookmarks in the XMPP server without checking
-       * it supports this capability.
-       * By default, false.
-       * @type {boolean}
-       */
-      forceRemote: false,
-
-      /**
        * Switches SilverChat logs in the debug level for displaying debugging messages in the
        * Javascript console of the web browser. By default, false.
        * @type {boolean}
@@ -151,10 +143,8 @@ var SilverChat = null;
      * @return {SilverChat}
      */
     init : function(options) {
-      if (options) {
-        this.settings = $.extend(true, this.settings, options);
-        this.settings.path += '/jsxc';
-      }
+      this.settings = $.extend(true, this.settings, options);
+      this.settings.path += '/jsxc';
 
       window.top.addEventListener("beforeunload", function() {
         jsxc.gui.changePresence('offline', true);
@@ -171,25 +161,11 @@ var SilverChat = null;
 
       jsxc.storage.setItem("debug", this.settings.debug);
 
-      if (SilverChat.settings.forceRemote) {
-        // we overrides some functions of the bookmark object to ensure it works directly with
-        // the remote XMPP service instead of the local bookmark in the case the bookmarking support
-        // of XMPP server is enabled but buggy (like with OpenFire).
-        jsxc.xmpp.bookmarks.load = function() {
-          jsxc.debug('Force to load group chats from remote');
-          jsxc.xmpp.bookmarks.loadFromRemote();
-        };
-
-        jsxc.xmpp.bookmarks.add = function(room, alias, nick, autojoin) {
-          jsxc.debug('Force to add group chat to remote');
-          jsxc.xmpp.bookmarks.addToRemote(room, alias, nick, autojoin);
-        };
-      }
-
       var jsxcOptions = {
         app_name : 'Silverpeas',
         logoutElement : $('#logout'),
         root : this.settings.path,
+        numberOfMsg: 5000,
         autoLang : this.settings.language.length === 0,
         defaultLang : (this.settings.language.length > 0 ? this.settings.language :
             jsxc.options.defaultLang),
@@ -206,35 +182,7 @@ var SilverChat = null;
         favicon : {
           enable : false
         },
-        defaultAvatar : function(jid) {
-          var data = jsxc.storage.getUserItem('buddy', jid);
-          if (data !== null && data.type === 'groupchat') {
-            jsxc.gui.avatarPlaceholder($(this).find('.jsxc_avatar'), jid);
-            return;
-          }
-
-          var el = $(this);
-
-          var avatar = new Image();
-          avatar.onerror = function() {
-            jsxc.gui.avatarPlaceholder(el.find('.jsxc_avatar'), jid);
-          };
-          avatar.onload = function() {
-            el.find('.jsxc_avatar').removeAttr('style');
-            el.find('.jsxc_avatar').css({
-              'background-image': 'url(' + avatar.src + ')',
-              'text-indent': '999px'
-            });
-          };
-
-          if (typeof SilverChat.settings.avatar === 'function') {
-            avatar.src = SilverChat.settings.avatar.call(jid);
-          } else if (typeof SilverChat.settings.avatar === 'string') {
-            avatar.src = SilverChat.settings.avatar + '/' + Strophe.getNodeFromJid(jid) + '.jpg';
-          } else {
-            avatar.onerror();
-          }
-        }
+        defaultAvatar : jsxc.gui.avatar.getBuddyAvatar
       };
 
       if (SilverChat.settings.ice !== null) {

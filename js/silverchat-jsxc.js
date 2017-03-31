@@ -22,6 +22,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// ensures all the dependencies are correctly defined
+if (typeof SilverChat === 'undefined' || typeof jsxc === 'undefined' ||
+    typeof Strophe === 'undefined') {
+  throw new Error('SilverChat or JSXC not defined!');
+}
+
 /**
  * We replaces the handler on the groupchat window initialization by our own in which we remove
  * some of the menu items.
@@ -151,6 +157,60 @@ jsxc.gui.roster.toggle = function(state) {
 
   return duration;
 };
+
+/**
+ * Gets the avatar of the specified buddy. This function is to be used as the default avatar getter.
+ * It is based upon the modified jsxc.gui.avatarPlaceholder function.
+ * @param jid the unique identifier of the buddy in the remote XMPP server.
+ */
+jsxc.gui.avatar.getBuddyAvatar = function(jid) {
+  var data = jsxc.storage.getUserItem('buddy', jid);
+  if (data !== null && data.type === 'groupchat') {
+    jsxc.gui.__avatarPlaceholder($(this).find('.jsxc_avatar'), jid);
+  } else {
+    jsxc.gui.avatarPlaceholder($(this).find('.jsxc_avatar'), jid);
+  }
+};
+
+/**
+ * Overrides the jsxc.gui.avatarPlaceholder function to set up a different behaviour so that it is
+ * invoked whatever the context; indeed the defaultAvatar jsxc option is not always invoked (for
+ * example when a room is opened after a direct invitation reception) so it is then required to
+ * override this function.
+ *
+ * The modified function looks up the avatar of a buddy by using the SilverChat.settings.avatar
+ * property (that can be a function).
+ */
+jsxc.gui.__avatarPlaceholder = jsxc.gui.avatarPlaceholder;
+jsxc.gui.avatarPlaceholder = function(el, seed, text) {
+  var buddy = seed || text;
+  buddy = Strophe.getNodeFromJid(buddy) || buddy;
+
+  var avatar = new Image();
+  avatar.onerror = function() {
+    jsxc.gui.__avatarPlaceholder(el, seed, text);
+  };
+  avatar.onload = function() {
+    el.removeAttr('style');
+    el.css({
+      'background-image': 'url(' + avatar.src + ')',
+      'text-indent': '999px'
+    });
+  };
+
+  switch (typeof SilverChat.settings.avatar) {
+    case 'function':
+      avatar.src = SilverChat.settings.avatar.call(buddy);
+      break;
+    case 'string':
+      avatar.src = SilverChat.settings.avatar + '/' + buddy + '.jpg';
+      break;
+    default:
+      avatar.onerror();
+      break;
+  }
+};
+
 
 /**
  * Shows in the buddy list of JSXC only the HTML element whose the data type is the specified one.
@@ -389,54 +449,8 @@ jsxc.storage.saveMessage = function(bid, direction, msg, encrypted, forwarded, s
 jsxc.muc.__init = jsxc.muc.init;
 jsxc.muc.init = function(o) {
   jsxc.muc.__init(o);
-
   // add a handler for incoming direct invitation for a room (group chat)
   jsxc.muc.conn.addHandler(jsxc.muc.onDirectInvitation, 'jabber:x:conference', 'message');
-
-  // listen for room status change to set some of the room properties when it is just created
-  $(document).on('status.muc.jsxc', function(event, code, room) {
-    if (code === '201') {
-      var roomdata = jsxc.storage.getUserItem('buddy', room);
-      if (roomdata.persistent) {
-        jsxc.muc.conn.muc.configure(room, function(stanza) {
-          jsxc.debug(stanza);
-          var form = Strophe.x.Form.fromXML(stanza);
-          for (var i = 0; i < form.fields.length; i++) {
-            switch (form.fields[i].var) {
-              case 'muc#roomconfig_roomname':
-                form.fields[i].values = [roomdata.name];
-                break;
-              case 'muc#roomconfig_roomdesc':
-                form.fields[i].values = [roomdata.subject];
-                break;
-              case 'muc#roomconfig_persistentroom':
-                form.fields[i].values = [1];
-                break;
-              case 'muc#roomconfig_moderatedroom':
-                form.fields[i].values = [0];
-                break;
-              case 'muc#roomconfig_whois':
-                form.fields[i].values = ['anyone'];
-                break;
-              case 'muc#roomconfig_allow_subscription':
-                form.fields[i].values = [1];
-                break;
-              case 'muc#roomconfig_enablelogging':
-                form.fields[i].values = [1];
-                break;
-            }
-          }
-          jsxc.muc.conn.muc.saveConfiguration(room, form, function() {
-            jsxc.debug('The room ' + room + ' is now configured');
-          }, function(response) {
-            jsxc.error('Error while configuring room ' + room, response);
-          });
-        }, function(response) {
-          jsxc.error('Error while loading configuration of room ' + room, response);
-        });
-      }
-    }
-  });
 };
 
 /**
@@ -506,6 +520,57 @@ jsxc.muc.newRoom = function(name, subject, persistent) {
 
   return room;
 };
+
+/**
+ * Listens for room status change to set the value of some of the room properties when it is just
+ * created.
+ */
+$(document).on('status.muc.jsxc', function(event, code, room) {
+
+  function setRoomProperties(form, roomdata) {
+    for (var i = 0; i < form.fields.length; i++) {
+      switch (form.fields[i].var) {
+        case 'muc#roomconfig_roomname':
+          form.fields[i].values = [roomdata.name];
+          break;
+        case 'muc#roomconfig_roomdesc':
+          form.fields[i].values = [roomdata.subject];
+          break;
+        case 'muc#roomconfig_persistentroom':
+        case 'muc#roomconfig_allow_subscription':
+        case 'muc#roomconfig_enablelogging':
+          form.fields[i].values = [1];
+          break;
+        case 'muc#roomconfig_moderatedroom':
+          form.fields[i].values = [0];
+          break;
+        case 'muc#roomconfig_whois':
+          form.fields[i].values = ['anyone'];
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  if (code === '201') {
+    var roomdata = jsxc.storage.getUserItem('buddy', room);
+    if (roomdata.persistent) {
+      jsxc.muc.conn.muc.configure(room, function(stanza) {
+        jsxc.debug(stanza);
+        var form = Strophe.x.Form.fromXML(stanza);
+        setRoomProperties(form, roomdata);
+        jsxc.muc.conn.muc.saveConfiguration(room, form, function() {
+          jsxc.debug('The room ' + room + ' is now configured');
+        }, function(response) {
+          jsxc.error('Error while configuring room ' + room, response);
+        });
+      }, function(response) {
+        jsxc.error('Error while loading configuration of room ' + room, response);
+      });
+    }
+  }
+});
 
 /**
  * Replaces the diacritics in the specified string with their most intuitive ASCII character.
