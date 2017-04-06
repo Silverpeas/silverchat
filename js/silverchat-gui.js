@@ -169,34 +169,7 @@ SilverChat.gui = {
 
       // search a user and open a chat with him
       $('#search_user').click(function() {
-        SilverChat.settings.selectUser(function(jid, alias) {
-          jsxc.debug('Add user ' + jid + ' into my roster');
-          var bid = jsxc.jidToBid(jid);
-          if (jsxc.storage.getUserItem('buddylist').indexOf(bid) < 0) {
-            if (jsxc.master) {
-              // add buddy to roster (trigger onRosterChanged)
-              var iq = $iq({
-                type: 'set'
-              }).c('query', {
-                xmlns: 'jabber:iq:roster'
-              }).c('item', {
-                jid: jid,
-                name: alias || Strophe.getNodeFromJid(jid)
-              }).c('group').t('xmpp');
-              jsxc.xmpp.conn.sendIQ(iq);
-
-              jsxc.storage.removeUserItem('add_' + bid);
-            } else {
-              jsxc.storage.setUserItem('add_' + bid, {
-                username: jid,
-                alias: alias || Strophe.getNodeFromJid(jid)
-              });
-            }
-          } else {
-            jsxc.gui.window.open(bid);
-          }
-
-        });
+        SilverChat.settings.selectUser(SilverChat.gui.openChatWindow);
       });
 
       // open a new group chat and invite to that group the previously selected buddies
@@ -376,6 +349,45 @@ SilverChat.gui = {
   },
 
   /**
+   * Opens a chat window with the specified user. In the case the user isn't in the buddies list of
+   * the current user, he's added in the roster (but without any subscriptions for status event from
+   * this user).
+   * @param {String} jid the unique identifier of the user in the remote chat server.
+   * @param {String} alias an alias to map with the jid above in the case of a chat with a user that
+   * isn't yet a buddy.
+   */
+  openChatWindow : function(jid, alias) {
+    var bid = jsxc.jidToBid(jid);
+    if (jsxc.storage.getUserItem('buddylist').indexOf(bid) < 0) {
+      jsxc.debug('Add user ' + jid + ' into my roster');
+      if (jsxc.master) {
+        // add buddy to roster: this will trigger onRosterChanged in JSXC which at his turn will
+        // indirect fire the event add.roster.jsxc
+        var unknown = jsxc.storage.getUserItem('unknown') || [];
+        unknown.push(bid);
+        jsxc.storage.setUserItem('unknown', unknown);
+
+        var iq = $iq({
+          type : 'set'
+        }).c('query', {
+          xmlns : 'jabber:iq:roster'
+        }).c('item', {
+          jid : jid, name : alias || Strophe.getNodeFromJid(jid)
+        }).c('group').t('xmpp');
+        jsxc.xmpp.conn.sendIQ(iq);
+
+        jsxc.storage.removeUserItem('add_' + bid);
+      } else {
+        jsxc.storage.setUserItem('add_' + bid, {
+          username : jid, alias : alias || Strophe.getNodeFromJid(jid)
+        });
+      }
+    } else {
+      jsxc.gui.window.open(bid);
+    }
+  },
+
+  /**
    * Sets the actions on the specified roster item representing a buddy with the specified buddy
    * identifier.
    * @param bid a buddy identifier
@@ -427,11 +439,20 @@ SilverChat.gui = {
   }
 };
 
-// A new item is added into the roster: either a buddy or a room.
+/**
+ * A new item is added into the roster: either a buddy, a room or an unknown user (a user that is
+ * not a buddy of the current user).
+ */
 $(document).on('add.roster.jsxc', function(event, bid, buddy, rosteritem) {
   jsxc.debug('A new ' + buddy.type + ' is added in the roster', buddy.jid);
   if (buddy.type === 'chat') {
     SilverChat.gui._setRosterBuddyActions(bid, buddy, rosteritem);
+
+    var unknown = jsxc.storage.getUserItem('unknown') || [];
+    jsxc.storage.removeUserItem('unknown');
+    for (var i = 0; i < unknown.length; i++) {
+      jsxc.gui.window.open(unknown[i]);
+    }
   }
   // a chat or a group chat is added: hide the menu and render the content of the actual tab
   SilverChat.gui.roster.selectTab(SilverChat.gui.roster.NO_MENU);
@@ -462,9 +483,12 @@ $(document).on('init.window.jsxc', function(event, chatWindow) {
     jsxc.debug('ICE service not found: video chat disabled!');
     chatWindow.find('.jsxc_video').remove();
   }
-  var type = chatWindow.hasClass('jsxc_groupchat') ? 'groupchat' : 'chat';
-  if (type === 'groupchat') {
-    chatWindow.find('.jsxc_menu ul').prepend(
+
+  var data = chatWindow.data();
+  var bid = jsxc.jidToBid(data.jid);
+  var roomdata = jsxc.storage.getUserItem('buddy', bid);
+  if (roomdata.type === 'groupchat') {
+    chatWindow.find('div.jsxc_menu ul').prepend(
         $('<li>').append($('<a>').attr('href', '#').addClass('jsxc_disabled').click(function() {
           if (!$(this).hasClass('jsxc_disabled')) {
             var room = chatWindow.data('bid');
@@ -472,6 +496,6 @@ $(document).on('init.window.jsxc', function(event, chatWindow) {
             jsxc.muc.invite(SilverChat.gui.roster.selection.buddies, room, roomdata.subject || '');
             SilverChat.gui.roster.clearSelection();
           }
-        }).append($('<span>').addClass('silverchat_invite').text($.t('Invite_To_Talk')))));
+        }).append($('<span>').addClass('silverchat_invite').text($.t('Invite_To_Group_Chat')))));
   }
 });

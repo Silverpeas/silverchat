@@ -26,10 +26,18 @@
  * The chat client for Silverpeas.
  * It is based upon JSXC (https://www.jsxc.org/)
  */
+
 var SilverChat = null;
 
 (function($) {
   "use strict";
+
+  if (top.window.SilverChat) {
+    if (!window.SilverChat) {
+      window.SilverChat = top.window.SilverChat;
+    }
+    return;
+  }
 
   if (typeof jsxc === 'undefined' || typeof Strophe === 'undefined') {
     throw new Error('SilverChat dependencies not defined: jsxc and Strophe');
