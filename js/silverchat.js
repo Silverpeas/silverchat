@@ -155,16 +155,17 @@ var SilverChat = null;
       this.settings.path += '/jsxc';
 
       window.top.addEventListener("beforeunload", function() {
-        jsxc.gui.changePresence('offline', true);
-        setTimeout(function() {
-          jsxc.xmpp.logout(true);
+        if (jsxc.master) {
+          jsxc.gui.changePresence('offline', true);
+          setTimeout(function() {
+            jsxc.xmpp.logout(true);
 
-          // here we call directly this method to be sure it have time to execute
-          jsxc.xmpp.disconnected();
+            // here we call directly this method to be sure it have time to execute
+            jsxc.xmpp.disconnected();
 
-          jsxc.error("Disconnected before leaving page");
-        }, 0);
-
+            jsxc.error("Disconnected before leaving page");
+          }, 0);
+        }
       }, false);
 
       jsxc.storage.setItem("debug", this.settings.debug);
