@@ -522,6 +522,87 @@ jsxc.muc.newRoom = function(name, subject, persistent) {
 };
 
 /**
+ * Takes into account a service used in the XMPP server isn't available when a message is sending.
+ *
+ * For example, when a chat composing message is sent to a non connected user, this message can be
+ * not put in the offline storage (according to the server configuration) and then, according to
+ * the RFC 6121 (section No Available or Connected Resource), a service-unavailable error is sent
+ * back. This method takes into account of such errors by not reporting them as they as a nominal
+ * way to respond to a client for a message sent to an unconnected user when the offline storage
+ * isn't enabled for them (according or not to the kind of message)
+ * @param message
+ * @return {boolean}
+ */
+jsxc.muc.onErrorMessage = function(message) {
+  var room = jsxc.jidToBid($(message).attr('from'));
+
+  if (jsxc.gui.window.get(room).length === 0) {
+    return true;
+  }
+
+  if ($(message).find('item-not-found').length > 0) {
+    jsxc.gui.window.postMessage({
+      bid: room,
+      direction: jsxc.Message.SYS,
+      msg: $.t('message_not_send_item-not-found')
+    });
+  } else if ($(message).find('forbidden').length > 0) {
+    jsxc.gui.window.postMessage({
+      bid: room,
+      direction: jsxc.Message.SYS,
+      msg: $.t('message_not_send_forbidden')
+    });
+  } else if ($(message).find('not-acceptable').length > 0) {
+    jsxc.gui.window.postMessage({
+      bid : room, direction : jsxc.Message.SYS, msg : $.t('message_not_send_not-acceptable')
+    });
+  } else if ($(message).find('service-unavailable').length > 0) {
+    if ($(message).find("[xmlns='http://jabber.org/protocol/chatstates']").length === 0) {
+      jsxc.gui.window.postMessage({
+        bid: room,
+        direction: jsxc.Message.SYS,
+        msg: $.t('message_not_send_resource-unavailable')
+      });
+    }
+  } else {
+    jsxc.gui.window.postMessage({
+      bid: room,
+      direction: jsxc.Message.SYS,
+      msg: $.t('message_not_send')
+    });
+  }
+
+  jsxc.debug('[muc] error message for ' + room, $(message).find('error')[0]);
+
+  return true;
+};
+
+/**
+ * Until the error handling is merged in the Strophe's plugin chatstates, we fix the behavior here.
+ */
+$(document).on('attached.jsxc', function() {
+  // use of the timeout to be sure the handler is already added in order to replace it with our
+  // own handler.
+  setTimeout(function() {
+    jsxc.xmpp.conn.chatstates._myNotificationReceived = function(message) {
+      if ($(message).find('error').length === 0) {
+        jsxc.xmpp.conn.chatstates._notificationReceived(message);
+      }
+    };
+
+    var strophe = jsxc.xmpp.conn;
+    for (var i = 0; i < strophe.handlers.length; i++) {
+      if ('http://jabber.org/protocol/chatstates' === strophe.handlers[i].ns) {
+        jsxc.debug('I FOUND THE HANDLER TO REMOVE!');
+        strophe.deleteHandler(strophe.handlers[i]);
+        break;
+      }
+    }
+    strophe.addHandler(jsxc.xmpp.conn.chatstates._myNotificationReceived, Strophe.NS.CHATSTATES, "message");
+  }, 500);
+});
+
+/**
  * Listens for room status change to set the value of some of the room properties when it is just
  * created.
  */

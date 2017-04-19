@@ -82,6 +82,8 @@ I18next.fr.translation['Events'] = 'Événements';
 I18next.en.translation['Events'] = 'Events';
 I18next.de.translation['Events'] = 'Ereignisse';
 
+I18next.fr.translation['message_not_send_resource-unavailable'] = "Votre message n'a pas été envoyé parce que votre interlocuteur n'est pas connecté ou accessible";
+
 // From this line, override the translations of JSXC by our own
 
 I18next.fr.translation['left_the_building'] = "__nickname__ a quitté le groupe de discussion";
