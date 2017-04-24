@@ -499,3 +499,15 @@ $(document).on('init.window.jsxc', function(event, chatWindow) {
         }).append($('<span>').addClass('silverchat_invite').text($.t('Invite_To_Group_Chat')))));
   }
 });
+
+
+// At disconnection, we clean up the roster.
+$(document).on('disconnected.jsxc', function() {
+  $(document).off('disconnected.jsxc', this);
+  if (jsxc.triggeredFromElement) {
+    $('#silverchat_roster').remove();
+    setTimeout(function() {
+      $(document).trigger('SilverChat.stopped');
+    }, 0);
+  }
+});

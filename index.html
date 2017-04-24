@@ -24,9 +24,19 @@
   <input type="text" id="username" value="toto">
   <input type="password" id="password" value="azerty">
   <input type="submit" id="login" value="Login">
+  <a href="#" id="logout">Logout</a>
 </form>
+
 <script type="application/javascript">
   $(function() {
+    $('#logout').click(function(evt) {
+      evt.stopImmediatePropagation();
+      SilverChat.stop().then(function() {
+        var win = (window.top ? window.top:window);
+        win.location = win.location;
+      });
+    });
+
     $('#form').submit(function() {
       SilverChat.init({
         path : '.',

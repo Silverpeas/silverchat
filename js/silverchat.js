@@ -154,25 +154,18 @@ var SilverChat = null;
       this.settings = $.extend(true, this.settings, options);
       this.settings.path += '/jsxc';
 
+      jsxc.storage.setItem("debug", this.settings.debug);
+
       window.top.addEventListener("beforeunload", function() {
         if (jsxc.master) {
-          jsxc.gui.changePresence('offline', true);
           setTimeout(function() {
-            jsxc.xmpp.logout(true);
-
-            // here we call directly this method to be sure it have time to execute
-            jsxc.xmpp.disconnected();
-
-            jsxc.error("Disconnected before leaving page");
+            SilverChat.stop();
           }, 0);
         }
       }, false);
 
-      jsxc.storage.setItem("debug", this.settings.debug);
-
       var jsxcOptions = {
         app_name : 'Silverpeas',
-        logoutElement : $('#logout'),
         root : this.settings.path,
         numberOfMsg: 5000,
         autoLang : this.settings.language.length === 0,
@@ -224,7 +217,8 @@ var SilverChat = null;
     },
 
     /**
-     * Starts the chat client. The current user is connected to the remote chat server.
+     * Starts the chat client. The chat client is bootstrapped and the the current user is connected
+     * to the remote chat server.
      * @returns {SilverChat}
      */
     start : function() {
@@ -233,12 +227,40 @@ var SilverChat = null;
     },
 
     /**
+     * Stops the chat client. The current user is disconnected from the remote chat server and the
+     * chat client is disposed (its resources are cleaned up). Some of the tasks are performed
+     * asynchronously, this is why this function returns a promise.
+     * @return {Promise} a promise executing the stop mechanism. The promise is resolved once the
+     * chat client is effectively stopped.
+     */
+    stop : function() {
+      if (this.isConnected()) {
+        return new Promise(function(resolve) {
+          jsxc.gui.changePresence('offline', true);
+          setTimeout(function() {
+            jsxc.triggeredFromElement = true;
+            jsxc.xmpp.logout(true);
+          }, 0);
+          $(document).on('SilverChat.stopped', function() {
+            resolve();
+          });
+        });
+      }
+
+      return new Promise(function(resolve) {
+        resolve();
+      });
+    },
+
+    /**
      * Connects to the remote chat server. To be used when the SilverChat is already started and
      * the current user is disconnected.
      * @return {SilverChat}
      */
     connect : function() {
-      jsxc.xmpp.login(this.settings.id + '@' + this.settings.domain, this.settings.password);
+      if (!this.isConnected()) {
+        jsxc.xmpp.login(this.settings.id + '@' + this.settings.domain, this.settings.password);
+      }
       return this;
     },
 
@@ -248,10 +270,12 @@ var SilverChat = null;
      * @return {SilverChat}
      */
     disconnect : function() {
-      jsxc.gui.changePresence('offline', true);
-      setTimeout(function() {
-        jsxc.xmpp.logout(false);
-      });
+      if (this.isConnected()) {
+        jsxc.gui.changePresence('offline', true);
+        setTimeout(function() {
+          jsxc.xmpp.logout(false);
+        }, 0);
+      }
       return this;
     },
 

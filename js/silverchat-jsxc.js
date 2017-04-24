@@ -73,20 +73,13 @@ jsxc.gui.roster.init = function() {
     var self = $(this);
     var pres = self.data('pres');
 
-    switch(pres) {
-      case 'offline':
-        jsxc.gui.changePresence(pres, true);
-        setTimeout(function() {
-          SilverChat.disconnect();
-        }, 0);
-        break;
-      case 'online':
+    if (pres === 'offline') {
+      SilverChat.disconnect();
+    } else {
+      if (!SilverChat.isConnected()) {
         SilverChat.connect();
-        jsxc.gui.changePresence(pres, true);
-        break;
-      default:
-        jsxc.gui.changePresence(pres);
-        break;
+      }
+      jsxc.gui.changePresence(pres);
     }
   });
 
@@ -412,33 +405,6 @@ jsxc.notice.__remove = jsxc.notice.remove;
 jsxc.notice.remove = function(nid) {
   jsxc.notice.__remove(nid);
   $('#silverchat_notice > span').text(jsxc.notice._num || '');
-};
-
-/**
- * Saves an incoming message into the user storage for future treatment. This method is used by
- * jsxc when a message is received from an unknown sender, that is to say a sender that is not
- * in the user's roster.
- * @param bid the buddy identifier of the sender.
- * @param direction the direction of the message ('in' for incoming message, 'out' for output
- * message, etc.)
- * @param msg the message body.
- * @param encrypted is the message encrypted?
- * @param forwarded is a message that was forwarded by another user?
- * @param stamp the timestamp of the message.
- * @memberOf jsxc.storage.
- */
-jsxc.storage.saveMessage = function(bid, direction, msg, encrypted, forwarded, stamp) {
-  var chat = jsxc.storage.getUserItem('chat', bid) || [];
-  chat.push({
-    bid : bid,
-    direction : direction,
-    msg : msg,
-    encrypted : encrypted,
-    forwarded : forwarded,
-    stamp : stamp,
-    attachment : null
-  });
-  jsxc.storage.setUserItem('chat', bid, chat);
 };
 
 /**
