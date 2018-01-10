@@ -144,29 +144,6 @@ SilverChat.gui = {
         SilverChat.gui.roster.selectTab(SilverChat.gui.roster.TALKS);
       });
 
-      // notification management
-      $('#manage_notifications').click(function() {
-        if (jsxc.storage.getUserItem('presence') === 'dnd') {
-          return;
-        }
-
-        if (window.Notification.permission !== 'granted') {
-          window.Notification.requestPermission().then(function(status) {
-            if (status === 'granted') {
-              jsxc.notification.enableNotification();
-            } else if (status === 'denied') {
-              jsxc.notification.disableNotification();
-            }
-          });
-        } else {
-          if (jsxc.notification.isNotificationEnabled()) {
-            jsxc.notification.disableNotification();
-          } else {
-            jsxc.notification.enableNotification();
-          }
-        }
-      });
-
       // search a user and open a chat with him
       $('#search_user').click(function() {
         SilverChat.settings.selectUser(SilverChat.gui.openChatWindow);
@@ -217,12 +194,6 @@ SilverChat.gui = {
         // the menu is shown, then hide it
         this.selectTab(this.NO_MENU);
       } else {
-        // the menu is hidden, then show it
-        if (jsxc.options.get('muteNotification')) {
-          $('#manage_notifications').addClass('mute');
-        } else {
-          $('#manage_notifications').removeClass('mute');
-        }
         actual = this._maskOnceMenuIsShown(actual);
         this._switchContentTo('#silverchat_roster_menu');
         jsxc.storage.setUserItem('roster_content', actual);
@@ -331,14 +302,6 @@ SilverChat.gui = {
 
     // initializes the roster of our own.
     SilverChat.gui.roster.init();
-
-    // once the roster is ready to be rendered we perform some predefined actions according to
-    // the user preferences and to the SilverChat settings.
-    if (jsxc.notification.isNotificationEnabled()) {
-      $('#manage_notifications').removeClass('mute');
-    } else {
-      $('#manage_notifications').addClass('mute');
-    }
 
     if (typeof SilverChat.settings.selectUser !== 'function') {
       $('#search_user').remove();

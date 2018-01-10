@@ -188,7 +188,7 @@ var SilverChat = null;
         favicon : {
           enable : false
         },
-        defaultAvatar : jsxc.gui.avatar.getBuddyAvatar
+        defaultAvatar : jsxc.gui.avatar.getBuddyAvatar,
       };
 
       if (SilverChat.settings.ice !== null) {

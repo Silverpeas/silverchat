@@ -335,53 +335,30 @@ jsxc.gui.closeVideoWindow = function() {
 };
 
 /**
- * Wrapper around the notify function: it will check if the notification option is enabled before.
+ * Wrapper around the notify function: it passes specifically an icon.
  * @type {function}
  * @memberOf jsxc.notification
  */
 jsxc.notification.__notify = jsxc.notification.notify;
 jsxc.notification.notify = function(title, msg, d, force, soundFile, loop, source) {
-  if (this.isNotificationEnabled()) {
-    jsxc.debug('Notification is enabled, notify!');
-    jsxc.notification.__notify(title, msg, d, force, soundFile, loop, source);
+  var logo = window.SilverChatSettings.get('un.d.i.u');
+  var notifParams;
+  if (title !== null && typeof title === 'object') {
+    notifParams = title;
+    notifParams.icon = logo;
+  } else {
+    notifParams = {
+      title : title,
+      msg : msg,
+      d : d,
+      force : force,
+      soundFile : soundFile,
+      loop : loop,
+      source : source,
+      icon : logo
+    };
   }
-};
-
-/**
- * Is the desktop notification enabled?
- * @return {boolean} true if the notification is enabled, false otherwise.
- * @memberOf jsxc.notification
- */
-jsxc.notification.isNotificationEnabled = function() {
-  return jsxc.storage.getUserItem('notification') === 1;
-};
-
-/**
- * Disables the desktop notifications.
- * @param {boolean} external True if triggered from external tab. Default: false.
- * @memberOf jsxc.notification
- */
-jsxc.notification.disableNotification = function(external) {
-  if (external !== true) {
-    jsxc.debug('Disable desktop notifications');
-    $('#manage_notifications').addClass('mute');
-    jsxc.options.notification = false;
-    jsxc.storage.setUserItem('notification', 0);
-  }
-};
-
-/**
- * Enables the desktop notifications.
- * @param {boolean} external True if triggered from external tab. Default: false.
- * @memberOf jsxc.notification
- */
-jsxc.notification.enableNotification = function(external) {
-  if (external !== true) {
-    jsxc.debug('Enable desktop notifications');
-    $('#manage_notifications').removeClass('mute');
-    jsxc.notification.init();
-    jsxc.storage.setUserItem('notification', 1);
-  }
+  jsxc.notification.__notify(notifParams);
 };
 
 /**
