@@ -38,6 +38,7 @@
       "setupRTC":true,
       "SDPUtil":true,
       "getSelection":true,
-      "SilverChat": true
+      "SilverChat": true,
+      "jsxcLanguageResources": true
    }
 }

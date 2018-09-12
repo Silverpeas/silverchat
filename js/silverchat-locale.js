@@ -22,74 +22,74 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-I18next.fr.translation['ClearHistory'] = 'Effacer l\'historique local des conversations';
-I18next.en.translation['ClearHistory'] = 'Clear the talk history';
-I18next.de.translation['ClearHistory'] = 'Löschen Sie den Diskussionsverlauf';
+jsxcLanguageResources.fr.translation['ClearHistory'] = 'Effacer l\'historique local des conversations';
+jsxcLanguageResources.en.translation['ClearHistory'] = 'Clear the talk history';
+jsxcLanguageResources.de.translation['ClearHistory'] = 'Löschen Sie den Diskussionsverlauf';
 
-I18next.fr.translation['Buddies'] = 'Contacts';
-I18next.en.translation['Buddies'] = 'Buddies';
-I18next.de.translation['Buddies'] = 'Kontakte';
+jsxcLanguageResources.fr.translation['Buddies'] = 'Contacts';
+jsxcLanguageResources.en.translation['Buddies'] = 'Buddies';
+jsxcLanguageResources.de.translation['Buddies'] = 'Kontakte';
 
-I18next.fr.translation['Group Chats'] = 'Discussions';
-I18next.en.translation['Group Chats'] = 'Group Chats';
-I18next.de.translation['Group Chats'] = 'Gruppe Chat';
+jsxcLanguageResources.fr.translation['Group Chats'] = 'Discussions';
+jsxcLanguageResources.en.translation['Group Chats'] = 'Group Chats';
+jsxcLanguageResources.de.translation['Group Chats'] = 'Gruppe Chat';
 
-I18next.fr.translation['Group_Chat'] = 'Discussion de groupe';
-I18next.en.translation['Group_Chat'] = 'Group Chat';
-I18next.de.translation['Group_Chat'] = 'Gruppe Chat';
+jsxcLanguageResources.fr.translation['Group_Chat'] = 'Discussion de groupe';
+jsxcLanguageResources.en.translation['Group_Chat'] = 'Group Chat';
+jsxcLanguageResources.de.translation['Group_Chat'] = 'Gruppe Chat';
 
-I18next.fr.translation['Menu'] = 'Menu';
-I18next.en.translation['Menu'] = 'Menu';
-I18next.de.translation['Menu'] = 'Menu';
+jsxcLanguageResources.fr.translation['Menu'] = 'Menu';
+jsxcLanguageResources.en.translation['Menu'] = 'Menu';
+jsxcLanguageResources.de.translation['Menu'] = 'Menu';
 
-I18next.fr.translation['Search_user'] = 'Rechercher un utilisateur';
-I18next.en.translation['Search_user'] = 'Looking for a user';
-I18next.de.translation['Search_user'] = 'Benutzer ein suchen';
+jsxcLanguageResources.fr.translation['Search_user'] = 'Rechercher un utilisateur';
+jsxcLanguageResources.en.translation['Search_user'] = 'Looking for a user';
+jsxcLanguageResources.de.translation['Search_user'] = 'Benutzer ein suchen';
 
-I18next.fr.translation['Notifications'] = 'Notifications';
-I18next.en.translation['Notifications'] = 'Notifications';
-I18next.de.translation['Notifications'] = 'Benachrichtigungen';
+jsxcLanguageResources.fr.translation['Notifications'] = 'Notifications';
+jsxcLanguageResources.en.translation['Notifications'] = 'Notifications';
+jsxcLanguageResources.de.translation['Notifications'] = 'Benachrichtigungen';
 
-I18next.fr.translation['New_Chat'] = 'Nouvelle discussion';
-I18next.en.translation['New_Chat'] = 'New chat';
-I18next.de.translation['New_Chat'] = 'Neuer Chat';
+jsxcLanguageResources.fr.translation['New_Chat'] = 'Nouvelle discussion';
+jsxcLanguageResources.en.translation['New_Chat'] = 'New chat';
+jsxcLanguageResources.de.translation['New_Chat'] = 'Neuer Chat';
 
-I18next.fr.translation['New_Group_Chat'] = 'Nouvelle discussion de groupe';
-I18next.en.translation['New_Group_Chat'] = 'New group chat';
-I18next.de.translation['New_Group_Chat'] = 'Neuer Gruppe Chat';
+jsxcLanguageResources.fr.translation['New_Group_Chat'] = 'Nouvelle discussion de groupe';
+jsxcLanguageResources.en.translation['New_Group_Chat'] = 'New group chat';
+jsxcLanguageResources.de.translation['New_Group_Chat'] = 'Neuer Gruppe Chat';
 
-I18next.fr.translation['Invite_To_Group_Chat'] = 'Inviter dans la discussion de groupe';
-I18next.en.translation['Invite_To_Group_Chat'] = 'Invite to the group chat';
-I18next.de.translation['Invite_To_Group_Chat'] = 'Laden Sie zum Gruppe Chat ein';
+jsxcLanguageResources.fr.translation['Invite_To_Group_Chat'] = 'Inviter dans la discussion de groupe';
+jsxcLanguageResources.en.translation['Invite_To_Group_Chat'] = 'Invite to the group chat';
+jsxcLanguageResources.de.translation['Invite_To_Group_Chat'] = 'Laden Sie zum Gruppe Chat ein';
 
-I18next.fr.translation['New_invitation'] = '__sender__ vous invite à rejoindre la discussion de groupe __room__';
-I18next.en.translation['New_invitation'] = '__sender__ invite you to join him the group chat __room__';
-I18next.de.translation['New_invitation'] = '__sender__ lädt Sie ein, sich dem Gruppe Chat __room__ anzuschließen';
+jsxcLanguageResources.fr.translation['New_invitation'] = '__sender__ vous invite à rejoindre la discussion de groupe __room__';
+jsxcLanguageResources.en.translation['New_invitation'] = '__sender__ invite you to join him the group chat __room__';
+jsxcLanguageResources.de.translation['New_invitation'] = '__sender__ lädt Sie ein, sich dem Gruppe Chat __room__ anzuschließen';
 
-I18next.fr.translation['Chat_room_name_pattern'] = 'Pas d\'espaces, pas de caractères accentués ou spéciaux (&"\'/:,;!?<>@)';
-I18next.en.translation['Chat_room_name_pattern'] = 'No spaces, no accented or special characters (&"\'/:,;!?<>@)';
-I18next.de.translation['Chat_room_name_pattern'] = 'Keine Leerzeichen, keine akzentuierten oder Sonderzeichen (&"\'/:,;!? <> @)';
+jsxcLanguageResources.fr.translation['Chat_room_name_pattern'] = 'Pas d\'espaces, pas de caractères accentués ou spéciaux (&"\'/:,;!?<>@)';
+jsxcLanguageResources.en.translation['Chat_room_name_pattern'] = 'No spaces, no accented or special characters (&"\'/:,;!?<>@)';
+jsxcLanguageResources.de.translation['Chat_room_name_pattern'] = 'Keine Leerzeichen, keine akzentuierten oder Sonderzeichen (&"\'/:,;!? <> @)';
 
-I18next.fr.translation['Search_User'] = 'Rechercher un utilisateur par son identifiant';
-I18next.en.translation['Search_User'] = 'Search a user by its identifier';
-I18next.de.translation['Search_User'] = 'Suchen Sie einen Benutzer nach seinem Bezeichner';
+jsxcLanguageResources.fr.translation['Search_User'] = 'Rechercher un utilisateur par son identifiant';
+jsxcLanguageResources.en.translation['Search_User'] = 'Search a user by its identifier';
+jsxcLanguageResources.de.translation['Search_User'] = 'Suchen Sie einen Benutzer nach seinem Bezeichner';
 
-I18next.fr.translation['You_have_received_message_from_'] = 'Vous avez reçu un message de ';
-I18next.en.translation['You_have_received_message_from_'] = 'You have received a message from ';
-I18next.de.translation['You_have_received_message_from_'] = 'Du hast eine Nachricht von ';
+jsxcLanguageResources.fr.translation['You_have_received_message_from_'] = 'Vous avez reçu un message de ';
+jsxcLanguageResources.en.translation['You_have_received_message_from_'] = 'You have received a message from ';
+jsxcLanguageResources.de.translation['You_have_received_message_from_'] = 'Du hast eine Nachricht von ';
 
-I18next.fr.translation['Events'] = 'Événements';
-I18next.en.translation['Events'] = 'Events';
-I18next.de.translation['Events'] = 'Ereignisse';
+jsxcLanguageResources.fr.translation['Events'] = 'Événements';
+jsxcLanguageResources.en.translation['Events'] = 'Events';
+jsxcLanguageResources.de.translation['Events'] = 'Ereignisse';
 
-I18next.fr.translation['message_not_send_resource-unavailable'] = "Votre message n'a pas été envoyé parce que votre interlocuteur n'est pas connecté ou accessible";
+jsxcLanguageResources.fr.translation['message_not_send_resource-unavailable'] = "Votre message n'a pas été envoyé parce que votre interlocuteur n'est pas connecté ou accessible";
 
 // From this line, override the translations of JSXC by our own
 
-I18next.fr.translation['left_the_building'] = "__nickname__ a quitté le groupe de discussion";
-I18next.en.translation['left_the_building'] = "__nickname__ left the chat group";
-I18next.de.translation['left_the_building'] = "__nickname__ hat die Gruppe verlassen";
+jsxcLanguageResources.fr.translation['left_the_building'] = "__nickname__ a quitté le groupe de discussion";
+jsxcLanguageResources.en.translation['left_the_building'] = "__nickname__ left the chat group";
+jsxcLanguageResources.de.translation['left_the_building'] = "__nickname__ hat die Gruppe verlassen";
 
-I18next.fr.translation['entered_the_room'] = "__nickname__ entre dans le groupe de discussion";
-I18next.en.translation['entered_the_room'] = "__nickname__ entered the chat group";
-I18next.de.translation['entered_the_room'] = "__nickname__ ist der Gruppe beigetreten";
+jsxcLanguageResources.fr.translation['entered_the_room'] = "__nickname__ entre dans le groupe de discussion";
+jsxcLanguageResources.en.translation['entered_the_room'] = "__nickname__ entered the chat group";
+jsxcLanguageResources.de.translation['entered_the_room'] = "__nickname__ ist der Gruppe beigetreten";
