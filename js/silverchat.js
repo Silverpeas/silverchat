@@ -167,7 +167,7 @@ var SilverChat = null;
       var jsxcOptions = {
         app_name : 'Silverpeas',
         root : this.settings.path,
-        numberOfMsg: 100,
+        numberOfMsg: 0,
         autoLang : this.settings.language.length === 0,
         defaultLang : (this.settings.language.length > 0 ? this.settings.language :
             jsxc.options.defaultLang),
