@@ -39,7 +39,7 @@ $(document).off('init.window.jsxc', jsxc.muc.initWindow).on('init.window.jsxc',
       if (conf.length >= 1) {
         conf.parent().remove();
       }
-    });
+});
 
 /**
  * Overrides the initialization of the jsxc roster's GUI to customize it: we replace the roster GUI
@@ -115,7 +115,8 @@ jsxc.gui.roster.init = function() {
 
   // trigger the event about the readiness of the SilverChat roster
   jsxc.gui.roster.ready = true;
-  $(document).trigger('ready.roster.jsxc');
+  $(document).trigger('ready.roster.jsxc', [rosterState]);
+  $(document).trigger('ready-roster-jsxc', [rosterState]);
 };
 
 /**
@@ -463,6 +464,52 @@ jsxc.muc.newRoom = function(name, subject, persistent) {
 
   return room;
 };
+
+/**
+ * Adds our own handler to take into account the peculiar case in which the groupchat window has
+ * been closed previously to a new opening (indeed, when closed, the room is itself freed and
+ * requires a new room join! (I don't know why)).
+ */
+$(document).off('add.roster.jsxc', jsxc.muc.onAddRoster).on('add.roster.jsxc', function(event, room, data, bud) {
+  var self = jsxc.muc;
+
+  if (data.type !== 'groupchat') {
+    return;
+  }
+
+  var bo = $('<a>');
+  $('<span>').addClass('jsxc_icon jsxc_bookmarkicon').appendTo(bo);
+  $('<span>').text($.t('Bookmark')).appendTo(bo);
+  bo.addClass('jsxc_bookmarkOptions');
+  bo.click(function(ev) {
+    ev.preventDefault();
+
+    jsxc.xmpp.bookmarks.showDialog(room);
+
+    return false;
+  });
+
+  bud.find('.jsxc_menu ul').append($('<li>').append(bo));
+
+  if (data.bookmarked) {
+    bud.addClass('jsxc_bookmarked');
+  }
+
+  bud.off('click').click(function() {
+    var data = jsxc.storage.getUserItem('buddy', room);
+    jsxc.gui.window.clear(room);
+    jsxc.xmpp.conn.muc.join(room, data.nickname, null, null, null, null);
+  });
+
+  bud.find('.jsxc_delete').click(function() {
+    if (data.bookmarked) {
+      jsxc.xmpp.bookmarks.delete(room);
+    }
+
+    self.leave(room);
+    return false;
+  });
+});
 
 /**
  * Listens for room status change to set the value of some of the room properties when it is just
