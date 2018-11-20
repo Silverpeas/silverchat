@@ -342,11 +342,9 @@ jsxc.gui.closeVideoWindow = function() {
  */
 jsxc.notification.__notify = jsxc.notification.notify;
 jsxc.notification.notify = function(title, msg, d, force, soundFile, loop, source) {
-  var logo = window.SilverChatSettings.get('un.d.i.u');
   var notifParams;
   if (title !== null && typeof title === 'object') {
     notifParams = title;
-    notifParams.icon = logo;
   } else {
     notifParams = {
       title : title,
@@ -355,10 +353,10 @@ jsxc.notification.notify = function(title, msg, d, force, soundFile, loop, sourc
       force : force,
       soundFile : soundFile,
       loop : loop,
-      source : source,
-      icon : logo
+      source : source
     };
   }
+  notifParams.icon = SilverChat.settings.notificationLogo;
   jsxc.notification.__notify(notifParams);
 };
 

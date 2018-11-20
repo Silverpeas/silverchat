@@ -125,6 +125,11 @@ var SilverChat = null;
       avatar : null,
 
       /**
+       * The URL of an image to render as a logo within the desktop notification sent by SilverChat.
+       */
+      notificationLogo: '',
+
+      /**
        * A function to provide a custom and an external way to select a user with whom the current
        * user wish to chat. The selected user will be then added into the current user's roster
        * but no presence subscription will be performed.
