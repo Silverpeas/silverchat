@@ -30,7 +30,7 @@ jsxcLanguageResources.fr.translation['Buddies'] = 'Contacts';
 jsxcLanguageResources.en.translation['Buddies'] = 'Buddies';
 jsxcLanguageResources.de.translation['Buddies'] = 'Kontakte';
 
-jsxcLanguageResources.fr.translation['Group Chats'] = 'Discussions';
+jsxcLanguageResources.fr.translation['Group Chats'] = 'Groupes';
 jsxcLanguageResources.en.translation['Group Chats'] = 'Group Chats';
 jsxcLanguageResources.de.translation['Group Chats'] = 'Gruppe Chat';
 
@@ -54,6 +54,10 @@ jsxcLanguageResources.fr.translation['New_Chat'] = 'Nouvelle discussion';
 jsxcLanguageResources.en.translation['New_Chat'] = 'New chat';
 jsxcLanguageResources.de.translation['New_Chat'] = 'Neuer Chat';
 
+jsxcLanguageResources.fr.translation['Help_New_Chat'] = 'Sélectionez d\'abord les contacts à inviter pour pouvoir créer une discussion de groupe';
+jsxcLanguageResources.en.translation['Help_New_Chat'] = 'Please select first the buddies to invite before creating any group chat';
+jsxcLanguageResources.de.translation['Help_New_Chat'] = 'Wählen Sie zuerst die Kontakte aus, die Sie einladen möchten, um eine Gruppendiskussion zu erstellen';
+
 jsxcLanguageResources.fr.translation['New_Group_Chat'] = 'Nouvelle discussion de groupe';
 jsxcLanguageResources.en.translation['New_Group_Chat'] = 'New group chat';
 jsxcLanguageResources.de.translation['New_Group_Chat'] = 'Neuer Gruppe Chat';
@@ -61,6 +65,14 @@ jsxcLanguageResources.de.translation['New_Group_Chat'] = 'Neuer Gruppe Chat';
 jsxcLanguageResources.fr.translation['Invite_To_Group_Chat'] = 'Inviter dans la discussion de groupe';
 jsxcLanguageResources.en.translation['Invite_To_Group_Chat'] = 'Invite to the group chat';
 jsxcLanguageResources.de.translation['Invite_To_Group_Chat'] = 'Laden Sie zum Gruppe Chat ein';
+
+jsxcLanguageResources.fr.translation['Select_Buddy'] = 'Sélectionner le contact';
+jsxcLanguageResources.en.translation['Select_Buddy'] = 'Select the buddy';
+jsxcLanguageResources.de.translation['Select_Buddy'] = 'Wählen Sie den Kontakt aus';
+
+jsxcLanguageResources.fr.translation['Unselect_Buddy'] = 'Désélectionner le contact';
+jsxcLanguageResources.en.translation['Unselect_Buddy'] = 'Unselect the buddy';
+jsxcLanguageResources.de.translation['Unselect_Buddy'] = 'Deaktivieren Sie den Kontakt';
 
 jsxcLanguageResources.fr.translation['New_invitation'] = '__sender__ vous invite à rejoindre la discussion de groupe __room__';
 jsxcLanguageResources.en.translation['New_invitation'] = '__sender__ invite you to join him the group chat __room__';
