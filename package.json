@@ -22,6 +22,6 @@
     "grunt-jsbeautifier": "^0.2.13",
     "grunt-text-replace": "~0.4.0",
     "grunt-insert": "^0.1.0",
-    "lodash": ">=4.17.11"
+    "lodash": ">=4.17.13"
   }
 }
