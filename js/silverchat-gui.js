@@ -457,11 +457,6 @@ $(document).on('receive.invitation.silverchat', function(event, buddy, roomjid, 
 
 // A chat window is initialized: customizes its behaviour for SilverChat.
 $(document).on('init.window.jsxc', function(event, chatWindow) {
-  if (SilverChat.settings.ice === null) {
-    jsxc.debug('ICE service not found: video chat disabled!');
-    chatWindow.find('.jsxc_video').remove();
-  }
-
   var data = chatWindow.data();
   var bid = jsxc.jidToBid(data.jid);
   var roomdata = jsxc.storage.getUserItem('buddy', bid);

@@ -29,7 +29,7 @@ if (typeof SilverChat === 'undefined' || typeof jsxc === 'undefined' ||
 }
 
 /**
- * We replaces the handler on the groupchat window initialization by our own in which we remove
+ * We replace the handler on the groupchat window initialization by our own in which we remove
  * some of the menu items.
  */
 $(document).off('init.window.jsxc', jsxc.muc.initWindow).on('init.window.jsxc',
@@ -39,6 +39,22 @@ $(document).off('init.window.jsxc', jsxc.muc.initWindow).on('init.window.jsxc',
       if (conf.length >= 1) {
         conf.parent().remove();
       }
+});
+
+/**
+ * We replace the WebRTC handler on the chat window initialization by our own in which we check
+ * the video feature can be or not enabled.
+ */
+$(document).ready(function() {
+  $(document).off('init.window.jsxc', jsxc.webrtc.initWindow).on('init.window.jsxc',
+      function(event, win) {
+        if (SilverChat.settings.ice === null || SilverChat.settings.ice === undefined) {
+          jsxc.debug('ICE service not found: video chat disabled!');
+        } else {
+          jsxc.debug("ICE service for video chat: " + SilverChat.settings.ice.server);
+          jsxc.webrtc.initWindow(event, win);
+        }
+      });
 });
 
 /**
@@ -483,9 +499,9 @@ $(document).on('status.muc.jsxc', function(event, code, room) {
         case 'muc#roomconfig_persistentroom':
         case 'muc#roomconfig_allow_subscription':
         case 'muc#roomconfig_enablelogging':
-        case 'muc#roomconfig_allowinvites':
-          form.fields[i].values = [0];
+          form.fields[i].values = [1];
           break;
+        case 'muc#roomconfig_allowinvites':
         case 'muc#roomconfig_moderatedroom':
         case 'muc#roomconfig_publicroom':
           form.fields[i].values = [0];

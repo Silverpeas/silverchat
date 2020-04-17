@@ -196,7 +196,7 @@ var SilverChat = null;
         defaultAvatar : jsxc.gui.avatar.getBuddyAvatar,
       };
 
-      if (SilverChat.settings.ice !== null) {
+      if (SilverChat.settings.ice !== undefined && SilverChat.settings.ice !== null) {
         jsxcOptions.RTCPeerConfig = {
           iceServers: [
             {
