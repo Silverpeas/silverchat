@@ -429,6 +429,8 @@ jsxc.muc.invite = function(buddies, room, reason) {
   for (var i = 0; i < buddies.length; i++) {
     jsxc.debug('Invite user ' + buddies[i] + ' to the group chat ' + room);
     jsxc.muc.conn.muc.directInvite(room, buddies[i], reason || '');
+    // only the owner of the room can affiliate a buddy as a member of the room
+    jsxc.muc.conn.muc.member(room, buddies[i], '');
   }
 };
 
@@ -481,9 +483,11 @@ $(document).on('status.muc.jsxc', function(event, code, room) {
         case 'muc#roomconfig_persistentroom':
         case 'muc#roomconfig_allow_subscription':
         case 'muc#roomconfig_enablelogging':
-          form.fields[i].values = [1];
+        case 'muc#roomconfig_allowinvites':
+          form.fields[i].values = [0];
           break;
         case 'muc#roomconfig_moderatedroom':
+        case 'muc#roomconfig_publicroom':
           form.fields[i].values = [0];
           break;
         case 'muc#roomconfig_whois':
@@ -510,6 +514,27 @@ $(document).on('status.muc.jsxc', function(event, code, room) {
       }, function(response) {
         jsxc.error('Error while loading configuration of room ' + room, response);
       });
+    }
+  }
+});
+
+$(document).on('presence.jsxc', function(event, from, status, presence) {
+  var self = jsxc.muc;
+  var room = jsxc.jidToBid(from);
+  var roomdata = jsxc.storage.getUserItem('buddy', room);
+  var xdata = $(presence).find('x[xmlns^="' + Strophe.NS.MUC + '"]');
+
+  if (self.conn.muc.roomNames.indexOf(room) < 0 || xdata.length === 0) {
+    return true;
+  }
+
+  if (status === 0) {
+    if (xdata.find('destroy').length > 0) {
+      if (roomdata.bookmarked) {
+        jsxc.xmpp.bookmarks.delete(room);
+      } else {
+        jsxc.gui.roster.purge(room);
+      }
     }
   }
 });
