@@ -407,8 +407,79 @@ jsxc.notice.remove = function(nid) {
 jsxc.muc.__init = jsxc.muc.init;
 jsxc.muc.init = function(o) {
   jsxc.muc.__init(o);
+  // we provide our own handler of incoming groupchat message to escape any room subject change
+  // notif
+  if (jsxc.muc.onGroupchatMessageHandlerRef) {
+    jsxc.muc.conn.deleteHandler(jsxc.muc.onGroupchatMessageHandlerRef);
+  }
+  jsxc.muc.onGroupchatMessageHandlerRef =
+      jsxc.muc.conn.addHandler(jsxc.muc.myOnGroupchatMessage, null, 'message', 'groupchat');
   // add a handler for incoming direct invitation for a room (group chat)
   jsxc.muc.conn.addHandler(jsxc.muc.onDirectInvitation, 'jabber:x:conference', 'message');
+};
+
+/**
+ * Our own handling of incoming group chat message. It is the implementation of JSXC minus the
+ * treatment of the room subject change.
+ * @param message
+ */
+jsxc.muc.myOnGroupchatMessage = function(message) {
+  var id = $(message).attr('id');
+
+  if (id && jsxc.el_exists(jsxc.Message.getDOM(id))) {
+    // ignore own incoming messages
+    return true;
+  }
+
+  var from = $(message).attr('from');
+  var htmlBodyElement = $(message).find('body[xmlns="' + Strophe.NS.XHTML + '"]').first();
+  var body = $(message).find('body:first').text();
+  var room = jsxc.jidToBid(from);
+  var nickname = Strophe.unescapeNode(Strophe.getResourceFromJid(from));
+  var roomdata = jsxc.storage.getUserItem('buddy', room);
+
+  if (body !== '') {
+    var delay = $(message).find('delay[xmlns="urn:xmpp:delay"]');
+    var stampDate = (delay.length > 0) ? new Date(delay.attr('stamp')) : new Date();
+    var stamp = stampDate.getTime();
+
+    var member = jsxc.storage.getUserItem('member', room) || {};
+
+    var sender = {
+      name: nickname,
+    };
+    var direction = jsxc.Message.IN;
+    var joinedAtDate = roomdata.joinedAt ? new Date(roomdata.joinedAt) : 0;
+
+    if (stampDate < joinedAtDate) {
+      if (roomdata.nickname === nickname) {
+        direction = jsxc.Message.PROBABLY_OUT;
+      }
+    } else {
+      if (member[nickname] && typeof member[nickname].jid === 'string') {
+        sender.jid = member[nickname].jid;
+      }
+    }
+
+    jsxc.gui.window.init(room);
+
+    var attachment = jsxc.xmpp.getAttachmentFromHtmlBody(htmlBodyElement);
+
+    if (attachment) {
+      body = null;
+    }
+
+    jsxc.gui.window.postMessage({
+      bid: room,
+      direction: direction,
+      msg: body,
+      stamp: stamp,
+      sender: sender,
+      attachment: attachment
+    });
+  }
+
+  return true;
 };
 
 /**
