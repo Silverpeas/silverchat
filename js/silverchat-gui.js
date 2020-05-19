@@ -44,9 +44,9 @@ SilverChat.gui = {
     BUDDIES : 1,
 
     /**
-     * Identifier of the tab in which are rendered the talks (group chats) in the roster.
+     * Identifier of the tab in which are rendered the group chats in the roster.
      */
-    TALKS : 2,
+    GROUP_CHATS : 2,
 
     /**
      * A mask to apply in order to hide the menu's content.
@@ -141,7 +141,7 @@ SilverChat.gui = {
 
       // group chats tab displaying
       $('#silverchat_groupchats_filter').click(function() {
-        SilverChat.gui.roster.selectTab(SilverChat.gui.roster.TALKS);
+        SilverChat.gui.roster.selectTab(SilverChat.gui.roster.GROUP_CHATS);
       });
 
       // search a user and open a chat with him
@@ -150,15 +150,15 @@ SilverChat.gui = {
       });
 
       // open a new group chat and invite to that group the previously selected buddies
-      $('#new_talk').click(function() {
+      $('#new_group_chat, #create_group_chat').click(function() {
         if (!$(this).hasClass('jsxc_disabled')) {
           var dialog = jsxc.gui.dialog.open(jsxc.gui.template.get('chatroom'));
           var $room = dialog.find('#jsxc_room');
           $room.attr('title', $.t('Chat_room_name_pattern')).focus();
-          $('#new_talk_form').submit(function(event) {
+          $('#new_group_chat_form, #create_group_chat').submit(function(event) {
             event.preventDefault();
-            var name = $room.val() ||
-                Strophe.getNodeFromJid(jsxc.xmpp.conn.jid) + '_' + new Date().getTime();
+            var name = $room.val() || Strophe.getNodeFromJid(jsxc.xmpp.conn.jid) + '_' +
+                new Date().getTime();
             var subject = $('#jsxc_dialog #jsxc_subject').val() || '';
 
             var room = jsxc.muc.newRoom(name, subject, true);
@@ -174,7 +174,7 @@ SilverChat.gui = {
     clearSelection: function() {
       SilverChat.gui.roster.selection.remove();
       $('.jsxc_rosteritem.selected').removeClass('selected');
-      $('#new_talk').addClass('jsxc_disabled');
+      $('#new_group_chat, #create_group_chat').addClass('jsxc_disabled');
     },
 
     /**
@@ -226,11 +226,13 @@ SilverChat.gui = {
           // select only the buddies
           currentElt = '#silverchat_buddies_filter';
           otherElt = '#silverchat_groupchats_filter';
+          $('#silverchat_roster_new_group_chat').hide();
           break;
-        case this.TALKS:
+        case this.GROUP_CHATS:
           // select only the talks
           currentElt = '#silverchat_groupchats_filter';
           otherElt = '#silverchat_buddies_filter';
+          $('#silverchat_roster_new_group_chat').show();
           break;
         default:
           jsxc.error('Unknown roster tab:' + toTab);
@@ -370,10 +372,10 @@ SilverChat.gui = {
       });
     }
     if (SilverChat.gui.roster.selection.empty()) {
-      $('#new_talk').addClass('jsxc_disabled');
+      $('#new_group_chat, #create_group_chat').addClass('jsxc_disabled');
       $('.silverchat_invite').parent().addClass('jsxc_disabled');
     } else if (SilverChat.gui.roster.selection.size() === 1) {
-      $('#new_talk').removeClass('jsxc_disabled');
+      $('#new_group_chat, #create_group_chat').removeClass('jsxc_disabled');
       $('.silverchat_invite').parent().removeClass('jsxc_disabled');
     }
   },
@@ -393,12 +395,17 @@ SilverChat.gui = {
       rosteritem.find('.jsxc_delete').remove();
     }
 
-    rosteritem.find('div.jsxc_menu ul').append(
-          $('<li>').append($('<a>').attr('href', '#').addClass('silverchat_select').click(function(event) {
-            event.stopPropagation();
-            SilverChat.gui._selectBuddy(bid, buddy, rosteritem);
-            rosteritem.find('div.jsxc_menu').removeClass('jsxc_open');
-          }).append($('<span>').addClass('jsxc_icon jsxc_bookmarkicon').text('')).append($('<span>').attr('id', 'silverchat_select_text').text($.t('Select_Buddy')))));
+    rosteritem.attr('draggable', true).on('dragstart', function(e) {
+      e.originalEvent.dataTransfer.setData('text/plain', bid);
+    });
+
+    rosteritem.find('div.jsxc_menu ul').append($('<li>').append(
+        $('<a>').attr('href', '#').addClass('silverchat_select').click(function(event) {
+          event.stopPropagation();
+          SilverChat.gui._selectBuddy(bid, buddy, rosteritem);
+          rosteritem.find('div.jsxc_menu').removeClass('jsxc_open');
+        }).append($('<span>').addClass('jsxc_icon jsxc_bookmarkicon').text('')).append(
+            $('<span>').attr('id', 'silverchat_select_text').text($.t('Select_Buddy')))));
 
     rosteritem.off('click'); // remove the previous click handler defined by JSXC itself
     rosteritem.click(function(event) {
@@ -420,7 +427,7 @@ SilverChat.gui = {
  * not a buddy of the current user).
  */
 $(document).on('add.roster.jsxc', function(event, bid, buddy, rosteritem) {
-  jsxc.debug('A new ' + buddy.type + ' is added in the roster', buddy.jid);
+  jsxc.debug('A new ' + buddy.type + ' is added in the roster as ' + buddy.jid);
   if (buddy.type === 'chat') {
     SilverChat.gui._setRosterBuddyActions(bid, buddy, rosteritem);
 
@@ -460,7 +467,16 @@ $(document).on('init.window.jsxc', function(event, chatWindow) {
   var data = chatWindow.data();
   var bid = jsxc.jidToBid(data.jid);
   var roomdata = jsxc.storage.getUserItem('buddy', bid);
-  if (roomdata.type === 'groupchat') {
+  if (roomdata.type === 'groupchat' && roomdata.owner) {
+    chatWindow.on('dragover', function(e) {
+      // required to enable the drop of draggable elements
+      e.preventDefault();
+    }).on('drop', function(e) {
+      e.preventDefault();
+      var bid = e.originalEvent.dataTransfer.getData('text/plain');
+      var room = chatWindow.data('bid');
+      jsxc.muc.invite([bid], room, roomdata.subject || '');
+    });
     chatWindow.find('div.jsxc_menu ul').prepend(
         $('<li>').append($('<a>').attr('href', '#').addClass('jsxc_disabled').click(function() {
           if (!$(this).hasClass('jsxc_disabled')) {
@@ -469,10 +485,11 @@ $(document).on('init.window.jsxc', function(event, chatWindow) {
             jsxc.muc.invite(SilverChat.gui.roster.selection.buddies, room, roomdata.subject || '');
             SilverChat.gui.roster.clearSelection();
           }
-        }).append($('<span>').addClass('silverchat_invite').text($.t('Invite_To_Group_Chat')))));
+        }).append(
+            $('<span>').addClass('silverchat_invite').attr('title', $.t('Help_Invite')).text(
+                $.t('Invite_To_Group_Chat')))));
   }
 });
-
 
 // At disconnection, we clean up the roster.
 $(document).on('disconnected.jsxc', function() {

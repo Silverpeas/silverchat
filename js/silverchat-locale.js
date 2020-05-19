@@ -34,7 +34,7 @@ jsxcLanguageResources.fr.translation['Group Chats'] = 'Groupes';
 jsxcLanguageResources.en.translation['Group Chats'] = 'Group Chats';
 jsxcLanguageResources.de.translation['Group Chats'] = 'Gruppe Chat';
 
-jsxcLanguageResources.fr.translation['Group_Chat'] = 'Discussion de groupe';
+jsxcLanguageResources.fr.translation['Group_Chat'] = 'Groupe de discussion';
 jsxcLanguageResources.en.translation['Group_Chat'] = 'Group Chat';
 jsxcLanguageResources.de.translation['Group_Chat'] = 'Gruppe Chat';
 
@@ -54,15 +54,19 @@ jsxcLanguageResources.fr.translation['New_Chat'] = 'Nouvelle discussion';
 jsxcLanguageResources.en.translation['New_Chat'] = 'New chat';
 jsxcLanguageResources.de.translation['New_Chat'] = 'Neuer Chat';
 
-jsxcLanguageResources.fr.translation['Help_New_Chat'] = 'Sélectionez d\'abord les contacts à inviter pour pouvoir créer une discussion de groupe';
-jsxcLanguageResources.en.translation['Help_New_Chat'] = 'Please select first the buddies to invite before creating any group chat';
-jsxcLanguageResources.de.translation['Help_New_Chat'] = 'Wählen Sie zuerst die Kontakte aus, die Sie einladen möchten, um eine Gruppendiskussion zu erstellen';
+jsxcLanguageResources.fr.translation['Help_New_Group_Chat'] = 'Sélectionnez d\'abord les contacts à inviter par Ctrl+Clic pour pouvoir créer un groupe de discussion';
+jsxcLanguageResources.en.translation['Help_New_Group_Chat'] = 'Please select first the buddies by Ctrl+Click to invite before creating any group chat';
+jsxcLanguageResources.de.translation['Help_New_Group_Chat'] = 'Wählen Sie zuerst die Kontakte aus, die Sie mit Ctrl+Klick einladen möchten, um eine Gruppendiskussion zu erstellen';
 
-jsxcLanguageResources.fr.translation['New_Group_Chat'] = 'Nouvelle discussion de groupe';
+jsxcLanguageResources.fr.translation['Help_Invite'] = 'Sélectionnez d\'abord le ou les contacts à inviter par un Ctrl+Clic. Vous pouvez aussi glisser/déposer le contact dans le groupe';
+jsxcLanguageResources.en.translation['Help_Invite'] = 'Please select first the buddies to invite by Ctrl+Click. You can also drag&drop the buddy in the group chat window';
+jsxcLanguageResources.de.translation['Help_Invite'] = 'Wählen Sie zuerst die Kontakte aus, die Sie mit Ctrl+Klick einladen möchten. Sie können den Buddy auch per Drag & Drop in das Gruppenchatfenster ziehen';
+
+jsxcLanguageResources.fr.translation['New_Group_Chat'] = 'Nouveau groupe de discussion';
 jsxcLanguageResources.en.translation['New_Group_Chat'] = 'New group chat';
 jsxcLanguageResources.de.translation['New_Group_Chat'] = 'Neuer Gruppe Chat';
 
-jsxcLanguageResources.fr.translation['Invite_To_Group_Chat'] = 'Inviter dans la discussion de groupe';
+jsxcLanguageResources.fr.translation['Invite_To_Group_Chat'] = 'Inviter dans le groupe de discussion';
 jsxcLanguageResources.en.translation['Invite_To_Group_Chat'] = 'Invite to the group chat';
 jsxcLanguageResources.de.translation['Invite_To_Group_Chat'] = 'Laden Sie zum Gruppe Chat ein';
 
@@ -74,7 +78,7 @@ jsxcLanguageResources.fr.translation['Unselect_Buddy'] = 'Désélectionner le co
 jsxcLanguageResources.en.translation['Unselect_Buddy'] = 'Unselect the buddy';
 jsxcLanguageResources.de.translation['Unselect_Buddy'] = 'Deaktivieren Sie den Kontakt';
 
-jsxcLanguageResources.fr.translation['New_invitation'] = '__sender__ vous invite à rejoindre la discussion de groupe __room__';
+jsxcLanguageResources.fr.translation['New_invitation'] = '__sender__ vous invite à rejoindre le groupe de discussion __room__';
 jsxcLanguageResources.en.translation['New_invitation'] = '__sender__ invite you to join him the group chat __room__';
 jsxcLanguageResources.de.translation['New_invitation'] = '__sender__ lädt Sie ein, sich dem Gruppe Chat __room__ anzuschließen';
 

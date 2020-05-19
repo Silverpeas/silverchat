@@ -249,6 +249,7 @@ var SilverChat = null;
           setTimeout(function() {
             jsxc.triggeredFromElement = true;
             jsxc.xmpp.logout(true);
+            localStorage.clear();
           }, 0);
           $(document).on('SilverChat.stopped', function() {
             resolve();
@@ -283,6 +284,7 @@ var SilverChat = null;
         jsxc.gui.changePresence('offline', true);
         setTimeout(function() {
           jsxc.xmpp.logout(false);
+          localStorage.clear();
         }, 0);
       }
       return this;

@@ -58,6 +58,18 @@ $(document).ready(function() {
 });
 
 /**
+ * Overrides jsxc.jidToBid to take into account the jid passed as argument can be null or undefined
+ * in some circumstances: a jid is expected in a stanza by jsxc but it isn't defined in because the
+ * stanza is the response of a request peculiar to SilverChat.
+ * @type {(function(*=): *)|(function(*=): (*))}
+ * @private
+ */
+jsxc.__jidToBid = jsxc.jidToBid;
+jsxc.jidToBid = function(jid) {
+  return jid === null || jid === undefined ? jid : jsxc.__jidToBid(jid);
+};
+
+/**
  * Overrides the initialization of the jsxc roster's GUI to customize it: we replace the roster GUI
  * of JSXC by our own.
  * @memberOf jsxc.gui.roster
@@ -523,7 +535,8 @@ jsxc.muc.invite = function(buddies, room, reason) {
 
 /**
  * Creates a new room with the specified name in a transparently way for the user (no UI asking for
- * information about the room to create).
+ * information about the room to create). The current user is the owner of the new room and only
+ * him can invite other users in SilverChat.
  * @param {string} name the name of the room.
  * @param {string} subject the reason of the room.
  * @memberOf jsxc.muc
@@ -538,16 +551,13 @@ jsxc.muc.newRoom = function(name, subject, persistent) {
   var reason = subject || '';
   jsxc.storage.setUserItem('member', room, {});
 
-  jsxc.muc.join(room, Strophe.getNodeFromJid(jsxc.xmpp.conn.jid),  null, name, reason, true, true);
+  jsxc.muc.join(room, Strophe.getNodeFromJid(jsxc.xmpp.conn.jid), null, name, reason, true, true);
 
-  if (persistent) {
-    var roomdata = jsxc.storage.getUserItem('buddy', room);
-    roomdata.persistent = true;
-    roomdata.config = jsxc.muc.CONST.ROOMCONFIG.INSTANT;
-    jsxc.storage.setUserItem('buddy', room, roomdata);
-  } else {
-    jsxc.storage.updateUserItem('buddy', room, 'config', jsxc.muc.CONST.ROOMCONFIG.INSTANT);
-  }
+  var roomdata = jsxc.storage.getUserItem('buddy', room) || {};
+  roomdata.config = jsxc.muc.CONST.ROOMCONFIG.INSTANT;
+  roomdata.owner = true;
+  roomdata.persistent = persistent;
+  jsxc.storage.setUserItem('buddy', room, roomdata);
 
   return room;
 };
@@ -556,9 +566,9 @@ jsxc.muc.newRoom = function(name, subject, persistent) {
  * Listens for room status change to set the value of some of the room properties when it is just
  * created.
  */
-$(document).on('status.muc.jsxc', function(event, code, room) {
+$(document).on('status.muc.jsxc', function(event, code, room, nickname, data) {
 
-  function setRoomProperties(form, roomdata) {
+  function setPersistentRoomProperties(form, roomdata) {
     for (var i = 0; i < form.fields.length; i++) {
       switch (form.fields[i].var) {
         case 'muc#roomconfig_roomname':
@@ -586,15 +596,16 @@ $(document).on('status.muc.jsxc', function(event, code, room) {
     }
   }
 
+  var roomdata = jsxc.storage.getUserItem('buddy', room);
   if (code === '201') {
-    var roomdata = jsxc.storage.getUserItem('buddy', room);
+    // room created
     if (roomdata.persistent) {
+      jsxc.debug('Room ' + roomdata.name + ' created by ' + nickname +
+          ': save specific silverchat configuration');
       jsxc.muc.conn.muc.configure(room, function(stanza) {
-        jsxc.debug(stanza);
         var form = Strophe.x.Form.fromXML(stanza);
-        setRoomProperties(form, roomdata);
+        setPersistentRoomProperties(form, roomdata);
         jsxc.muc.conn.muc.saveConfiguration(room, form, function() {
-          jsxc.debug('The room ' + room + ' is now configured');
         }, function(response) {
           jsxc.error('Error while configuring room ' + room, response);
         });
@@ -602,29 +613,214 @@ $(document).on('status.muc.jsxc', function(event, code, room) {
         jsxc.error('Error while loading configuration of room ' + room, response);
       });
     }
+  } else if (code === '110') {
+    jsxc.debug('MUC affiliation of ' + nickname + ' to room ' + room + ': ' + data.affiliation);
+    if (data.affiliation === jsxc.muc.CONST.AFFILIATION.OWNER) {
+      roomdata.owner = true;
+      jsxc.storage.setUserItem('buddy', room, roomdata);
+    }
   }
 });
 
+/**
+ * Adds a specific behaviour when a presence stanza about the destroy of a room is received.
+ * In this case, the room is deleted in the bookmarks of the current user and then removed from
+ * his roster.
+ */
 $(document).on('presence.jsxc', function(event, from, status, presence) {
-  var self = jsxc.muc;
   var room = jsxc.jidToBid(from);
   var roomdata = jsxc.storage.getUserItem('buddy', room);
   var xdata = $(presence).find('x[xmlns^="' + Strophe.NS.MUC + '"]');
 
-  if (self.conn.muc.roomNames.indexOf(room) < 0 || xdata.length === 0) {
+  if (jsxc.muc.conn.muc.roomNames.indexOf(room) < 0 || xdata.length === 0) {
     return true;
   }
 
-  if (status === 0) {
-    if (xdata.find('destroy').length > 0) {
-      if (roomdata.bookmarked) {
-        jsxc.xmpp.bookmarks.delete(room);
-      } else {
-        jsxc.gui.roster.purge(room);
-      }
+  if (status === 0 && xdata.find('destroy').length > 0) {
+    jsxc.debug('Room ' + room + ' has been deleted');
+    if (roomdata.bookmarked) {
+      jsxc.xmpp.bookmarks.delete(room);
+    } else {
+      jsxc.gui.roster.purge(room);
     }
   }
 });
+
+/**
+ * Overrides the MAM handler of JSXC to take in charge the MAM for MUCs.
+ * @param bid the bare jabber identifier of the resource for which the MAM is asked: it can be
+ * either the bid of the user or the bid of a room.
+ */
+jsxc.xmpp.mam.nextMessages = function(bid) {
+  var buddyData = jsxc.storage.getUserItem('buddy', bid) || {};
+  var to;
+  if (buddyData.type === 'groupchat') {
+    to = bid;
+  }
+
+  var self = jsxc.xmpp.mam;
+  var lastArchiveUid = buddyData.lastArchiveUid;
+  var queryId = self.conn.getUniqueId();
+  var mamOptions = jsxc.options.get('mam') || {};
+  var history = jsxc.storage.getUserItem('history', bid) || [];
+
+  if (buddyData.archiveExhausted) {
+    jsxc.debug('No more archived messages.');
+    return;
+  }
+
+  var queryOptions = {
+    queryid: queryId,
+    before: lastArchiveUid || '',
+    onMessage: function() {
+      var args = Array.from(arguments);
+      args.unshift(bid);
+      self.onMessage.apply(this, args);
+      return true;
+    },
+    onComplete: function() {
+      var args = Array.from(arguments);
+      args.unshift(bid);
+      self.onComplete.apply(this, args);
+      return true;
+    }
+  };
+
+  if (to === undefined) {
+    queryOptions.with = bid;
+  }
+
+  var oldestMessageId = history[history.length - 1];
+
+  if (oldestMessageId && !lastArchiveUid) {
+    var oldestMessage = new jsxc.Message(oldestMessageId);
+    queryOptions.end = (new Date(oldestMessage.stamp)).toISOString();
+  }
+
+  if (mamOptions.max) {
+    queryOptions.max = mamOptions.max;
+  }
+
+  jsxc.debug('MAM => Messages query options for ' + bid + ': ', queryOptions);
+  self.conn.mam.query(to, queryOptions);
+};
+
+/**
+ * Overrides the archived messages handler of JSXC to take in charge the messages for MUCs.
+ * @param bid the bare jabber identifier of the resource for which the MAM is asked: it can be
+ * either the bid of the user or the bid of a room.
+ * @param stanza the message stanza received from the MAM service for the specified resource
+ * identified by the bid.
+ */
+jsxc.xmpp.mam.onMessage = function(bid, stanza) {
+  jsxc.debug('MAM => message for ' + bid + ': ', stanza);
+  stanza = $(stanza);
+  var result = stanza.find('result[xmlns="' + Strophe.NS.MAM + '"]');
+  var queryId = result.attr('queryid');
+
+  if (result.length !== 1) {
+    return;
+  }
+
+  var forwarded = result.find('forwarded[xmlns="' + jsxc.CONST.NS.FORWARD + '"]');
+  var message = forwarded.find('message');
+  var messageId = $(message).attr('id');
+
+  if (message.length !== 1) {
+    return;
+  }
+
+  var direction = jsxc.xmpp.mam.getMessageDirection(bid, $(message));
+  if (direction === null) {
+    return;
+  }
+
+  var delay = forwarded.find('delay[xmlns="urn:xmpp:delay"]');
+  var stamp = (delay.length > 0) ? new Date(delay.attr('stamp')) : new Date();
+  stamp = stamp.getTime();
+  var body = $(message).find('body:first').text();
+
+  if (!body || body.match(/\?OTR/i)) {
+    return true;
+  }
+
+  var win = jsxc.gui.window.get(bid);
+  var textarea = win.find('.jsxc_textarea');
+  if (textarea.find('[id="' + messageId + '"]').length === 0) {
+    var pseudoChatElement = $('<div>');
+    pseudoChatElement.attr('id', messageId.replace(/:/g, '-'));
+    pseudoChatElement.attr('data-queryId', queryId);
+
+    var lastMessage = textarea.find('[data-queryId="' + queryId + '"]').last();
+    var history = jsxc.storage.getUserItem('history', bid) || [];
+
+    if (history.indexOf(messageId) < 0) {
+      if (lastMessage.length === 0) {
+        textarea.prepend(pseudoChatElement);
+        history.push(messageId);
+      } else {
+        lastMessage.after(pseudoChatElement);
+        history.splice(history.indexOf(lastMessage.attr('id').replace(/-/g, ':')), 0, messageId);
+      }
+    }
+
+    jsxc.storage.setUserItem('history', bid, history);
+  }
+
+  jsxc.gui.window.postMessage({
+    _uid : messageId,
+    bid : bid,
+    sender: direction.from,
+    direction : direction.way,
+    msg : body,
+    encrypted : false,
+    forwarded : true,
+    stamp : stamp
+  });
+};
+
+/**
+ * From an archived message fetched from the MAM service, figure out the direction of the message
+ * according to the current user
+ * @param bid the bar Jabber identifier of the resource for which the specified archived message was
+ * fetched.
+ * @param message the message that was sent and that is retrieved from a MAM message stanza
+ * @return {object|null} the message direction. It is an object giving the way of the direction and
+ * the sender of the message. The way is either jsxc.Message.OUT if the message was sent by the
+ * current user or jsxc.Message.IN if the message was received by the user. The sender is an object
+ * defined by the sender jid and by his name.
+ * Null if the message carried by a MAM archived message stanza isn't an expected one by JSXC.
+ */
+jsxc.xmpp.mam.getMessageDirection = function(bid, message) {
+  var direction = null;
+  var type = message.attr('type');
+  var from = message.attr('from');
+  if (type === 'groupchat') {
+    var jid = message.find('item').attr('jid');
+    var userBid = jsxc.jidToBid(jid);
+
+    // nickname of the sender in the room
+    var nickname = Strophe.unescapeNode(Strophe.getResourceFromJid(from));
+    direction = {
+      way : (userBid === jsxc.bid) ? jsxc.Message.OUT : jsxc.Message.IN,
+      from : {jid: jid, name: nickname}
+    };
+  } else if (type === 'chat') {
+    var to = message.attr('to');
+    if (jsxc.jidToBid(from) !== bid && jsxc.jidToBid(to) !== bid) {
+      return null;
+    }
+
+    // name of the sender that should be a buddy
+    var buddy = jsxc.storage.getUserItem('buddy', jsxc.jidToBid(from));
+    var name = buddy !== null ? buddy.name || null : null;
+    direction = {
+      way : (jsxc.jidToBid(to) === bid) ? jsxc.Message.OUT : jsxc.Message.IN,
+      from : {jid: from, name: name}
+    };
+  }
+  return direction;
+};
 
 /**
  * Replaces the diacritics in the specified string with their most intuitive ASCII character.
@@ -632,7 +828,7 @@ $(document).on('presence.jsxc', function(event, from, status, presence) {
  * @return {string} the string resulting of the replacement.
  * @private
  */
-function _removeDiacritics (str) {
+function _removeDiacritics(str) {
 
   var defaultDiacriticsRemovalMap = [
     {'base':'A', 'letters':/[\u0041\u24B6\uFF21\u00C0\u00C1\u00C2\u1EA6\u1EA4\u1EAA\u1EA8\u00C3\u0100\u0102\u1EB0\u1EAE\u1EB4\u1EB2\u0226\u01E0\u00C4\u01DE\u1EA2\u00C5\u01FA\u01CD\u0200\u0202\u1EA0\u1EAC\u1EB6\u1E00\u0104\u023A\u2C6F]/g},
