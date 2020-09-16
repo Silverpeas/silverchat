@@ -262,12 +262,14 @@ jsxc.gui.showInBuddyList = function(type) {
  * @param bid the buddy identifier of the sender. Identical to the JID for unknown senders.
  * @memberOf jsxc.gui
  */
-jsxc.gui.showUnknownSender = function(bid) {
+jsxc.gui.showUnknownSender = function(bid, userName) {
   jsxc.gui.dialog.open(jsxc.gui.template.get('newchat'), {
     'noClose' : true
   });
 
-  $('#jsxc_dialog .jsxc_their_jid').text(Strophe.getNodeFromJid(bid));
+  var userFullName = userName !== undefined && userName.length > 0 ? userName : Strophe.getNodeFromJid(bid);
+
+  $('#jsxc_dialog .jsxc_their_jid').text(userFullName);
 
   $('#jsxc_dialog .jsxc_deny').click(function() {
     jsxc.storage.removeUserItem('chat', bid);
@@ -278,15 +280,15 @@ jsxc.gui.showUnknownSender = function(bid) {
     jsxc.gui.dialog.close();
 
     jsxc.storage.saveBuddy(bid, {
-      jid: bid,
-      name: Strophe.getNodeFromJid(bid),
-      status: 0,
-      sub: 'none',
-      res: []
+      jid : bid,
+      name : userFullName,
+      status : 0,
+      sub : 'none',
+      res : []
     });
 
     var chat = jsxc.storage.getUserItem('chat', bid) || [];
-    for(var i = 0; i < chat.length; i++) {
+    for (var i = 0; i < chat.length; i++) {
       jsxc.gui.window.postMessage(chat[i]);
     }
     jsxc.storage.removeUserItem('chat', bid);
@@ -390,14 +392,29 @@ jsxc.notification.notify = function(title, msg, d, force, soundFile, loop, sourc
 
 /**
  * Wrapper around the notice adding to multicast the notification of the event to the different
- * parts of the GUI.
+ * parts of the GUI and to provides a different notification behaviour with messages sent by
+ * unknown senders.
  * @memberOf jsxc.notice
  */
 jsxc.notice.__add = jsxc.notice.add;
-jsxc.notice.add = function(msg, description, fnName, fnParams, id) {
-  jsxc.notice.__add(msg, description, fnName, fnParams, id);
-  $('#silverchat_notice > span').text(jsxc.notice._num);
-  $('#jsxc_notice ul').addClass('silverchat_menu_item');
+jsxc.notice.add = function(data, fnName, fnParams, id) {
+  var sendNotice = function(stanza) {
+    var userFullName = stanza !== null && stanza !== undefined? $(stanza).find("vCard > FN").text() : '';
+    data.description += userFullName;
+    fnParams.push(userFullName);
+    jsxc.notice.__add(data, fnName, fnParams, id);
+    $('#silverchat_notice > span').text(jsxc.notice._num);
+    $('#jsxc_notice ul').addClass('silverchat_menu_item');
+  };
+
+  if (data.msg === $.t('Unknown_sender') && fnParams.length === 1) {
+    var bid = fnParams[0];
+    data.msg = $.t('Friendship_request');
+    data.description = $.t('You_have_received_message_from_');
+    jsxc.xmpp.loadVcard(bid, sendNotice, sendNotice);
+  } else {
+    sendNotice();
+  }
 };
 
 /**
