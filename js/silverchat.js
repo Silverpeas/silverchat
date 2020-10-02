@@ -103,6 +103,21 @@ var SilverChat = null;
       domain : 'im.silverpeas.net',
 
       /**
+       * ACL supported currently by SilverChat.
+       */
+      acl : {
+        /**
+         * ACL on the groupchats
+         */
+        groupchat: {
+          /**
+           * ACE about the right to create a groupchat. By default true.
+           */
+          creation : true
+        }
+      },
+
+      /**
        * The ISO 639-1 code of the language to use in the GUI localization. By default, in English.
        * @type {string}
        */
