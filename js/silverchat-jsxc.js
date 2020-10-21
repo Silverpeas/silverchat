@@ -58,6 +58,42 @@ $(document).ready(function() {
 });
 
 /**
+ * Engine motorizing SilverChat. It provides facilities a top of the XMPP communications by using
+ * JSXC.
+ * @type {{withListOfRoomsDo: SilverChat.engine.withListOfRoomsDo}}
+ */
+SilverChat.engine = {
+
+  /**
+   * Loads all the available rooms from the remote XMPP server and passes their JID to the specified
+   * handler.
+   * @param handler a function accepting as argument an array of room JIDs.
+   */
+  withListOfRoomsDo: function(handler) {
+    var timerId = setInterval(function() {
+      if (!jsxc.options.get('muc')) {
+        return;
+      }
+      clearInterval(timerId);
+
+      var server = jsxc.options.get('muc').server;
+      jsxc.xmpp.conn.muc.listRooms(server, function(stanza) {
+        var rooms = [];
+        $(stanza).find('item').each(function() {
+          var rjid = $(this).attr('jid').toLowerCase();
+          rooms.push(rjid);
+        });
+
+        handler(rooms);
+      }, function(stanza) {
+        var errTextMsg = $(stanza).find('error text').text() || null;
+        jsxc.warn('Could not load rooms', errTextMsg);
+      });
+    }, 1000);
+  }
+};
+
+/**
  * Overrides jsxc.jidToBid to take into account the jid passed as argument can be null or undefined
  * in some circumstances: a jid is expected in a stanza by jsxc but it isn't defined in because the
  * stanza is the response of a request peculiar to SilverChat.
@@ -379,14 +415,27 @@ jsxc.notification.notify = function(title, msg, d, force, soundFile, loop, sourc
     notifParams = {
       title : title,
       msg : msg,
-      d : d,
+      duration : d,
       force : force,
       soundFile : soundFile,
       loop : loop,
       source : source
     };
   }
+
   notifParams.icon = SilverChat.settings.notificationLogo;
+  if (typeof notifParams.source === 'string') {
+    var data = jsxc.storage.getUserItem('buddy', notifParams.source);
+    if (data !== null) {
+      var src = jsxc.storage.getUserItem('avatar', data.avatar);
+      if (typeof src === 'string' && src !== '0') {
+        notifParams.icon = src;
+      }
+    } else {
+      notifParams.source = null;
+    }
+  }
+
   jsxc.notification.__notify(notifParams);
 };
 
@@ -398,6 +447,9 @@ jsxc.notification.notify = function(title, msg, d, force, soundFile, loop, sourc
  */
 jsxc.notice.__add = jsxc.notice.add;
 jsxc.notice.add = function(data, fnName, fnParams, id) {
+  if (fnParams === undefined || fnParams === null) {
+    fnParams = [];
+  }
   var sendNotice = function(stanza) {
     var userFullName = stanza !== null && stanza !== undefined? $(stanza).find("vCard > FN").text() : '';
     data.description += userFullName;
@@ -512,8 +564,8 @@ jsxc.muc.myOnGroupchatMessage = function(message) {
 };
 
 /**
- * A direct invitation for a group chat is received: the event 'receive.invitation.silverchat' is
- * triggered, delegating the treatment to SilverChat.
+ * A direct invitation for a group chat is received: the group chat existence is checked before
+ * sending the event 'receive.invitation.silverchat', delegating so the treatment to SilverChat.
  * @param {xml} stanza the incoming message.
  * @return {boolean} true: the handler has be kept once the incoming stanza is processed.
  * @memberOf jsxc.muc
@@ -527,9 +579,13 @@ jsxc.muc.onDirectInvitation = function(stanza) {
   var roomjid = invitation.attr('jid');
   var reason = invitation.attr('reason') || '';
 
-  jsxc.debug('Direct invitation to the group chat ' + roomjid + ' received from ' + sender);
+  SilverChat.engine.withListOfRoomsDo(function(rooms) {
+    if (rooms.indexOf(roomjid) >= 0) {
+      jsxc.debug('Direct invitation to the group chat ' + roomjid + ' received from ' + sender);
 
-  $(document).trigger('receive.invitation.silverchat', [sender, roomjid, reason]);
+      $(document).trigger('receive.invitation.silverchat', [sender, roomjid, reason]);
+    }
+  });
 
   return true;
 };
@@ -653,15 +709,94 @@ $(document).on('presence.jsxc', function(event, from, status, presence) {
     return true;
   }
 
+  jsxc.debug("ROOM STATUS IS " + status);
+
   if (status === 0 && xdata.find('destroy').length > 0) {
-    jsxc.debug('Room ' + room + ' has been deleted');
-    if (roomdata.bookmarked) {
-      jsxc.xmpp.bookmarks.delete(room);
-    } else {
-      jsxc.gui.roster.purge(room);
-    }
+    setTimeout(function() {
+      jsxc.debug('Room ' + room + ' has been deleted');
+      if (roomdata !== null && roomdata.bookmarked) {
+        jsxc.xmpp.bookmarks.delete(room, false);
+      } else {
+        jsxc.gui.roster.purge(room);
+      }
+    }, 1000);
   }
 });
+
+/**
+ * Overrides the remote bookmarks loading in order to avoid the creation of rooms that have been
+ * deleted during the absence of the user. The code in JSXC has been reused but with an additional
+ * behaviour.
+ */
+jsxc.xmpp.bookmarks.loadFromRemote = function() {
+
+  SilverChat.engine.withListOfRoomsDo(function(rooms) {
+    jsxc.debug('Load bookmarks from pubsub');
+    var bookmarks = jsxc.xmpp.conn.bookmarks;
+    bookmarks.get(function(stanza) {
+      var bl = jsxc.storage.getUserItem('buddylist');
+
+      $(stanza).find('conference').each(function() {
+        var conference = $(this);
+        var room = conference.attr('jid');
+        var roomName = conference.attr('name') || room;
+        var autojoin = conference.attr('autojoin') || false;
+        var nickname = conference.find('nick').text();
+        nickname = (nickname.length > 0) ? nickname : Strophe.getNodeFromJid(jsxc.xmpp.conn.jid);
+
+        if (autojoin === 'true') {
+          autojoin = true;
+        } else if (autojoin === 'false') {
+          autojoin = false;
+        }
+
+        var data = jsxc.storage.getUserItem('buddy', room) || {};
+
+        data = $.extend(data, {
+          jid : room,
+          name : roomName,
+          sub : 'both',
+          status : 0,
+          type : 'groupchat',
+          state : jsxc.muc.CONST.ROOMSTATE.INIT,
+          subject : null,
+          bookmarked : true,
+          autojoin : autojoin,
+          nickname : nickname
+        });
+
+        if (rooms.indexOf(room) >= 0) {
+          jsxc.storage.setUserItem('buddy', room, data);
+          bl.push(room);
+          jsxc.gui.roster.add(room);
+          if (autojoin) {
+            jsxc.debug('auto join ' + room);
+            jsxc.xmpp.conn.muc.join(room, nickname);
+          }
+        } else {
+          jsxc.debug('Bookmarked room ' + room + ' has been deleted');
+          jsxc.xmpp.bookmarks.delete(room, false);
+        }
+      });
+
+      jsxc.storage.setUserItem('buddylist', bl);
+    }, function(stanza) {
+      var err = jsxc.xmpp.bookmarks.parseErr(stanza);
+
+      if (err.reasons[0] === 'item-not-found') {
+        jsxc.debug('create bookmark node');
+
+        bookmarks.createBookmarksNode(function() {
+          jsxc.debug('Bookmark node created.');
+        }, function() {
+          jsxc.debug('Could not create bookmark node.');
+        });
+      } else {
+        jsxc.debug('[XMPP] Could not create bookmark: ' + err.type, err.reasons);
+      }
+    });
+  });
+};
 
 /**
  * Overrides the MAM handler of JSXC to take in charge the MAM for MUCs.
