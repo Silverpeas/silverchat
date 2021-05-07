@@ -23,7 +23,7 @@
     "grunt-insert": "^0.1.0",
     "grunt-jsbeautifier": "^0.2.13",
     "grunt-text-replace": "~0.4.0",
-    "lodash": ">=4.17.19",
+    "lodash": ">=4.17.21",
     "websocket-extensions": ">=0.1.4"
   }
 }
